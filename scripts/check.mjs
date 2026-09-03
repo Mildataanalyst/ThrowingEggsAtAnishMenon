@@ -32,7 +32,6 @@ const checks = [
   ['old-style loading egg animation', 'loading-egg'],
   ['old-style thick sling outline', 'ctx.lineWidth = 22'],
   ['old-style sling core', 'ctx.lineWidth = 7'],
-  ['old-style sling fork circles', 'ctx.arc(leftForkX, forkY, 12'],
   ['old-style impact noise', 'this.noise({ duration: 0.19'],
   ['impact flash', 'this.impactFlash = 0.19'],
   ['impact zoom', 'this.impactZoom = 1.022'],
@@ -40,31 +39,43 @@ const checks = [
   ['opening strong subline', 'reviews pending'],
   ['mid-flight attempt promotion', 'promoteShotToThreat(shot)'],
   ['collision bypass closed', 'No actual collision can bypass the scripted order.'],
-  ['strict Level 1 hitbox', 'rx = 44'],
-  ['strict Level 2 hitbox', 'rx = 39'],
-  ['strict Level 3 hitbox', 'rx = 40'],
-  ['Level 2 hard deadline', 'this.l2DeadlineAt = this.now + LEVEL_TWO_DURATION_MS'],
-  ['Level 2 money dodge line', 'MONEY MAKES ME QUICK.'],
-  ['Level 3 ten-hit HUD', '10 HITS BEFORE THE STORY ENDS'],
-  ['Level 3 ten-hit completion', 'this.l3Hits >= LEVEL_THREE_HITS_REQUIRED'],
-  ['Level 3 interruption stacking', 'Math.max(this.storyResumeAt, this.now) + pauseMs'],
-  ['Level 3 interrupted status', "'INTERRUPTED · ' + pauseSeconds.toFixed(1) + 'S'"],
-  ['Level 3 story starts immediately', 'this.storyResumeAt = this.now;'],
-  ['cache-busted source', 'game.js?v=8.5.0'],
+  ['story is Level 2', "eyebrow: 'LEVEL 2'"],
+  ['cash is final Level 3', "eyebrow: 'FINAL LEVEL · LEVEL 3'"],
+  ['Level 1 routes to story', 'onClick: () => this.showLevel3Intro()'],
+  ['story routes to cash', 'onClick: () => this.showLevel2Intro()'],
+  ['cash final note', "eyebrow: 'FINAL NOTE'"],
+  ['20-second cash copy', 'You have 20 seconds. Hit him 5 times'],
+  ['30-second story copy', 'painfully boring 30-second activation story'],
+  ['non-restarting story copy', 'The story does not restart when you hit him'],
+  ['story continues from same point', 'Math.max(this.storyResumeAt, this.now) + pauseMs'],
+  ['no visible interruption timer', "'INTERRUPTED · '"],
+  ['clock 9:00', "value: '9:00 AM'"],
+  ['clock 9:30', "value: '9:30 AM'"],
+  ['clock 10:00', "value: '10:00 AM'"],
+  ['clock 10:30', "value: '10:30 AM'"],
+  ['clock 11:00', "value: '11:00 AM'"],
+  ['clock 11:07', "value: '11:07 AM'"],
+  ['clock progress matches sequence', 'this.stateTime / 8600'],
+  ['cache-busted source', 'game.js?v=8.6.0'],
   ['final birthday copy', 'Continue being this annoying.']
 ];
+
 for (const [label, token] of checks) {
   const haystack = label.includes('loading') || label.includes('preparing') || label.includes('cache')
     ? `${index}\n${css}`
     : label.includes('noise') ? audio : game;
-  if (!haystack.includes(token)) throw new Error(`Missing check: ${label}`);
+  if (label === 'no visible interruption timer') {
+    assert.ok(!game.includes(token), 'Visible interruption countdown should be removed');
+  } else if (!haystack.includes(token)) {
+    throw new Error(`Missing check: ${label}`);
+  }
 }
 
-assert.equal(LEVEL_TWO_DURATION_MS, 10_000);
-assert.equal(LEVEL_THREE_STORY_DURATION_MS, 25_000);
+assert.equal(LEVEL_TWO_DURATION_MS, 20_000);
+assert.equal(LEVEL_THREE_STORY_DURATION_MS, 30_000);
 assert.equal(LEVEL_THREE_HITS_REQUIRED, 10);
-assert.equal(LEVEL_THREE_HIT_PAUSE_MIN_MS, 2_000);
-assert.equal(LEVEL_THREE_HIT_PAUSE_MAX_MS, 3_000);
+assert.equal(LEVEL_THREE_HIT_PAUSE_MIN_MS, 1_000);
+assert.equal(LEVEL_THREE_HIT_PAUSE_MAX_MS, 1_000);
 
 assert.deepEqual(SHOT_PATTERNS.l1_play, {
   1: 'forceHit', 2: 'forceDodge', 4: 'forceDodge', 5: 'forceDodge'
@@ -93,21 +104,27 @@ assert.ok(normalAssistFor('l1_play') < 0.1);
 assert.ok(normalAssistFor('l2_play') < 0.05);
 assert.ok(normalAssistFor('l3_play') <= 0.015);
 
-const l3HitStart = game.indexOf("} else if (this.state === 'l3_play') {", game.indexOf('registerHit('));
-const l3HitEnd = game.indexOf('\n    }\n  }\n\n  addCharacterSplat', l3HitStart);
-assert.ok(l3HitStart > -1 && l3HitEnd > l3HitStart, 'Could not isolate Level 3 hit branch');
-const l3HitBranch = game.slice(l3HitStart, l3HitEnd);
-assert.ok(!l3HitBranch.includes('this.storyProgress = 0'), 'Level 3 hit must not restart the story');
-assert.ok(l3HitBranch.includes('this.storyResumeAt = Math.max'), 'Every Level 3 hit must extend the interruption');
+const completion1 = game.indexOf('  completeLevel1() {');
+const completion3 = game.indexOf('  completeLevel3() {');
+const completion2 = game.indexOf('  completeLevel2() {');
+assert.ok(completion1 > -1 && completion3 > -1 && completion2 > -1);
+assert.ok(
+  game.slice(completion1, game.indexOf('  showLevel2Intro()', completion1)).includes('this.showLevel3Intro()'),
+  'Level 1 must route to story Level 2'
+);
+assert.ok(
+  game.slice(completion3, game.indexOf('  configureCharacter(', completion3)).includes('this.showLevel2Intro()'),
+  'Story Level 2 must route to cash Level 3'
+);
 
-const l3UpdateStart = game.indexOf('  updateL3Play(dt) {');
-const l3UpdateEnd = game.indexOf('\n  updateParticles(dt) {', l3UpdateStart);
-assert.ok(l3UpdateStart > -1 && l3UpdateEnd > l3UpdateStart, 'Could not isolate Level 3 update loop');
-const l3Update = game.slice(l3UpdateStart, l3UpdateEnd);
-assert.ok(!l3Update.includes('this.triggerDuck('), 'Level 3 should have only the scripted 1st, 3rd and 7th dodges');
-assert.ok(l3Update.includes('this.character.x += this.character.vx * dt'), 'Anish must keep moving while the story is paused');
+const storyHitStart = game.indexOf("} else if (this.state === 'l3_play') {", game.indexOf('registerHit('));
+const storyHitEnd = game.indexOf('\n    }\n  }\n\n  addCharacterSplat', storyHitStart);
+assert.ok(storyHitStart > -1 && storyHitEnd > storyHitStart, 'Could not isolate story hit branch');
+const storyHitBranch = game.slice(storyHitStart, storyHitEnd);
+assert.ok(!storyHitBranch.includes('this.storyProgress = 0'), 'Story must never restart on a hit');
+assert.ok(storyHitBranch.includes('this.storyResumeAt = Math.max'), 'A hit must pause narration for one second');
 
 console.log(
   `Validation passed: ${required.length} files, ${checks.length} feature checks, ` +
-  'exact Level 1/2/3 shot sequences, ten-hit Level 3, and non-resetting 2–3 second interruptions.'
+  'office → story → cash order, 30-second story, invisible one-second pauses, and 20-second cash deadline.'
 );

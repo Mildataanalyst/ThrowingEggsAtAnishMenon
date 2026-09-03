@@ -9,7 +9,7 @@ import {
   normalAssistFor
 } from './difficulty.js';
 
-window.__ANISH_GAME_VERSION__ = '8.5.0';
+window.__ANISH_GAME_VERSION__ = '8.6.0';
 
 const W = 430;
 const H = 780;
@@ -25,7 +25,7 @@ const COLORS = {
   green: '#85d975'
 };
 
-const STORY = `Okay, so I went to this restaurant for an activation, right? We had a standee, a promoter, one extension board, three unnecessary opinions, and a QR code nobody scanned except a waiter who looked guilty for me. Then Anish said the real problem was brand visibility, but the actual tragedy was that he had still not reached the point. Anyway, the real story starts with the parking issue, then a detour into box office math, then a deeply avoidable note on margins.`;
+const STORY = `Okay, so I went to this restaurant for an activation, right? The standee was meant to arrive at seven, but the vendor called at seven fifteen because the auto took the wrong turn. Then the manager said the plug point near the entrance wasn’t working, so we moved the ring light six inches to the left. Anyway, after forty minutes, one person scanned the QR code—but it was the waiter.`;
 const STORY_WORDS = STORY.split(/\s+/);
 const INTERRUPTION_LINES = [
   'RUDE. WHERE WAS I?',
@@ -142,7 +142,7 @@ class EggGame {
     this.speech = null;
     this.tutorialUntil = 0;
     this.pendingCompleteAt = 0;
-    this.clockFrame = { label: 'OFFICE OPENS', value: '9:30 AM' };
+    this.clockFrame = { label: 'OFFICE OPENS', value: '9:00 AM' };
     this.lastClockIndex = -1;
 
     this.dust = Array.from({ length: 28 }, () => ({
@@ -375,9 +375,9 @@ class EggGame {
       eyebrow: 'LEVEL 1 COMPLETE',
       title: 'OFFICE ENTRY<br>SUCCESSFULLY RUINED.',
       compact: true,
-      body: `Beautiful. He has reached office and immediately been welcomed correctly.<br><br>Now stop him from doing the only thing he truly respects: <strong>reaching money.</strong>`,
+      body: `Beautiful. He has reached office and immediately been welcomed correctly.<br><br>Now prevent him from finishing a story nobody asked to hear.`,
       button: 'LEVEL 2',
-      onClick: () => this.showLevel2Intro()
+      onClick: () => this.showLevel3Intro()
     });
   }
 
@@ -388,12 +388,12 @@ class EggGame {
     this.configureCharacter({ x: 68, y: 520, scale: 0.345, rotation: 0.05, alpha: 1 });
     this.character.briefcase = true;
     this.showCard({
-      eyebrow: 'LEVEL 2',
+      eyebrow: 'FINAL LEVEL · LEVEL 3',
       title: 'CAPITAL HAS BEEN<br>SPOTTED.',
       compact: true,
-      body: 'He has locked onto a nearby pile of money like it whispered “incentive” in his ear.<br><strong>You have 10 seconds. Hit him 5 times before he reaches the cash.</strong>',
+      body: 'He has locked onto a nearby pile of money like it whispered “incentive” in his ear.<br><strong>You have 20 seconds. Hit him 5 times before he reaches the cash.</strong>',
       button: 'BLOCK THE CASH',
-      micro: '10 SECONDS · FASTER MOVEMENT · HE DODGES A LOT',
+      micro: '20 SECONDS · 5 HITS · HE DODGES A LOT',
       onClick: () => this.startLevel2()
     });
   }
@@ -441,11 +441,15 @@ class EggGame {
     this.eggReady = false;
     this.sound.success();
     this.showCard({
-      eyebrow: 'LEVEL 2 COMPLETE',
-      title: 'CASH DELAYED.',
-      body: 'Not denied. Merely delayed. He remains spiritually committed to cash.',
-      button: 'FINAL LEVEL',
-      onClick: () => this.showLevel3Intro()
+      eyebrow: 'FINAL NOTE',
+      title: 'HAPPY BIRTHDAY,<br>ANISH MENON.',
+      compact: true,
+      body: 'Here’s to another year of coming to office at 11 a.m., watching a hundred movies and pretending it’s work, loafing around — and continuing your friendship with Milan, your best decision in Eternal.<br><br><strong>Continue being this annoying.</strong> If you want to continue throwing eggs at him, press play again.',
+      button: 'PLAY AGAIN',
+      onClick: () => {
+        this.resetCampaign();
+        this.showHome();
+      }
     });
   }
 
@@ -456,12 +460,12 @@ class EggGame {
     this.configureCharacter({ x: 215, y: 558, scale: 0.355, rotation: -0.04, alpha: 1 });
     this.character.drink = true;
     this.showCard({
-      eyebrow: 'LEVEL 3',
+      eyebrow: 'LEVEL 2',
       title: 'HE HAS HAD<br>TWO DRINKS.',
       compact: true,
-      body: 'Now he wants to tell a long activation story nobody asked for, needed, or consented to.<br><strong>Hit him 10 times before the 25-second story ends. Every hit interrupts him for 2–3 seconds, but he resumes from the same point.</strong>',
+      body: 'Now he wants to tell the same painfully boring 30-second activation story.<br><strong>Hit him 10 times before he reaches the end. The story does not restart when you hit him.</strong>',
       button: 'SAVE THE AUDIENCE',
-      micro: '10 HITS · STORY PAUSES, NEVER RESTARTS',
+      micro: '10 HITS · 30 SECONDS · STORY KEEPS GOING',
       onClick: () => this.startLevel3()
     });
   }
@@ -495,7 +499,7 @@ class EggGame {
     this.eggReady = false;
     this.sound.fail();
     this.showCard({
-      eyebrow: '25 SECONDS LATER',
+      eyebrow: '30 SECONDS LATER',
       title: 'HE FINISHED<br>THE STORY.',
       body: 'Several audience members fell asleep on impact.',
       button: 'TRY AGAIN',
@@ -504,21 +508,18 @@ class EggGame {
   }
 
   completeLevel3() {
-    if (this.state === 'final') return;
-    this.state = 'final';
+    if (this.state === 'l3_complete') return;
+    this.state = 'l3_complete';
     this.activeShot = null;
     this.eggReady = false;
     this.sound.success();
     this.showCard({
-      eyebrow: 'FINAL NOTE',
-      title: 'HAPPY BIRTHDAY,<br>ANISH MENON.',
+      eyebrow: 'LEVEL 2 COMPLETE',
+      title: 'THE STORY<br>FINALLY STOPPED.',
       compact: true,
-      body: 'Here’s to another year of coming to office at 11 a.m., watching a hundred movies and pretending it’s work, loafing around — and continuing your friendship with Milan, your best decision in Eternal.<br><br><strong>Continue being this annoying.</strong> If you want to continue throwing eggs at him, press play again.',
-      button: 'PLAY AGAIN',
-      onClick: () => {
-        this.resetCampaign();
-        this.showHome();
-      }
+      body: 'Ten eggs later, he has temporarily lost the will to continue.<br><br>Unfortunately, he has now spotted money.',
+      button: 'FINAL LEVEL',
+      onClick: () => this.showLevel2Intro()
     });
   }
 
@@ -960,8 +961,12 @@ class EggGame {
 
   updateL1Clock() {
     const times = [
-      { at: 0, label: 'OFFICE OPENS', value: '10:30 AM' },
-      { at: 2900, label: 'WORK LOGIN', value: '11:07 AM' }
+      { at: 0, label: 'OFFICE OPENS', value: '9:00 AM' },
+      { at: 1400, label: 'OFFICE OPENS', value: '9:30 AM' },
+      { at: 2800, label: 'OFFICE OPENS', value: '10:00 AM' },
+      { at: 4200, label: 'OFFICE OPENS', value: '10:30 AM' },
+      { at: 5600, label: 'OFFICE OPENS', value: '11:00 AM' },
+      { at: 7000, label: 'WORK LOGIN', value: '11:07 AM' }
     ];
     let index = 0;
     for (let i = 0; i < times.length; i += 1) {
@@ -972,7 +977,7 @@ class EggGame {
       this.lastClockIndex = index;
       this.sound.tick();
     }
-    if (this.stateTime >= 5200) {
+    if (this.stateTime >= 8600) {
       this.state = 'l1_walk';
       this.stateTime = 0;
       this.configureCharacter({ x: -118, y: 520, scale: 0.41, rotation: 0, alpha: 1 });
@@ -1419,7 +1424,7 @@ class EggGame {
     ctx.fillText(frame.value, W / 2, y + (small ? 48 : 78));
 
     if (!small) {
-      const p = clamp(this.stateTime / 5200, 0, 1);
+      const p = clamp(this.stateTime / 8600, 0, 1);
       ctx.fillStyle = 'rgba(245,240,230,.10)';
       roundedRect(ctx, x + 24, y + height - 16, width - 48, 3, 2);
       ctx.fill();
@@ -1641,12 +1646,6 @@ class EggGame {
     ctx.textAlign = 'right';
     ctx.fillText(Math.ceil((L3_STORY_DURATION - this.storyProgress) / 1000) + ' SEC', x + width - 22, y + 14);
 
-    if (this.state === 'l3_play' && this.now < this.storyResumeAt) {
-      const pauseSeconds = Math.max(0, (this.storyResumeAt - this.now) / 1000);
-      ctx.fillStyle = COLORS.yellowDeep;
-      ctx.textAlign = 'left';
-      ctx.fillText('INTERRUPTED · ' + pauseSeconds.toFixed(1) + 'S', x + 22, y + height - 40);
-    }
     ctx.restore();
   }
 
@@ -1913,7 +1912,7 @@ class EggGame {
   drawHUD(ctx) {
     if (!this.isPlaying()) return;
     ctx.save();
-    const level = this.state === 'l1_play' ? 1 : this.state === 'l2_play' ? 2 : 3;
+    const level = this.state === 'l1_play' ? 1 : this.state === 'l3_play' ? 2 : 3;
     ctx.fillStyle = 'rgba(245,240,230,.05)';
     roundedRect(ctx, 10, 10, 92, 24, 10); ctx.fill();
     roundedRect(ctx, W - 108, 10, 98, 24, 10); ctx.fill();
@@ -1925,16 +1924,16 @@ class EggGame {
     ctx.textAlign = 'center';
     ctx.fillStyle = COLORS.warmDim;
     if (level === 1) ctx.fillText('HIT HIM 5 TIMES', W / 2, 28);
-    if (level === 2) ctx.fillText('KEEP HIM AWAY FROM THE MONEY', W / 2, 28);
-    if (level === 3) ctx.fillText('10 HITS BEFORE THE STORY ENDS', W / 2, 28);
+    if (level === 2) ctx.fillText('10 HITS BEFORE THE STORY ENDS', W / 2, 28);
+    if (level === 3) ctx.fillText('KEEP HIM AWAY FROM THE MONEY', W / 2, 28);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = COLORS.warm;
     const counter = level === 1
       ? (this.l1Hits + '/5')
       : level === 2
-        ? (this.l2Hits + '/5')
-        : (this.l3Hits + '/' + LEVEL_THREE_HITS_REQUIRED);
+        ? (this.l3Hits + '/' + LEVEL_THREE_HITS_REQUIRED)
+        : (this.l2Hits + '/5');
     ctx.fillText('HITS ' + counter, W - 20, 27);
     ctx.restore();
   }
@@ -2004,7 +2003,7 @@ class EggGame {
       this.drawCharacter(ctx);
     }
 
-    if (this.state === 'l3_intro' || this.state === 'l3_play' || this.state === 'l3_fail' || this.state === 'final') {
+    if (this.state === 'l3_intro' || this.state === 'l3_play' || this.state === 'l3_fail' || this.state === 'l3_complete') {
       if (this.state === 'l3_play') this.drawStoryBubble(ctx);
       this.drawCharacter(ctx);
     }
@@ -2044,7 +2043,8 @@ class EggGame {
       l2_complete: () => this.completeLevel2(),
       l3_intro: () => this.showLevel3Intro(),
       l3_play: () => this.startLevel3(),
-      final: () => this.completeLevel3()
+      l3_complete: () => this.completeLevel3(),
+      final: () => this.completeLevel2()
     };
     actions[state]?.();
   }

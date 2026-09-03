@@ -5,10 +5,12 @@ export const SHOT_PATTERNS = Object.freeze({
     4: 'forceDodge',
     5: 'forceDodge'
   }),
+  // Internal l2 is the cash chase, displayed as Level 3 in V8.6.
   l2_play: Object.freeze({
     1: 'forceDodge',
     4: 'forceDodge'
   }),
+  // Internal l3 is the drunk story, displayed as Level 2 in V8.6.
   l3_play: Object.freeze({
     1: 'forceDodge',
     3: 'forceDodge',
@@ -28,8 +30,8 @@ export function normalAssistFor(state) {
   return 0;
 }
 
-export const LEVEL_TWO_DURATION_MS = 10_000;
-export const LEVEL_THREE_STORY_DURATION_MS = 25_000;
+export const LEVEL_TWO_DURATION_MS = 20_000;
+export const LEVEL_THREE_STORY_DURATION_MS = 30_000;
 export const LEVEL_THREE_HITS_REQUIRED = 10;
-export const LEVEL_THREE_HIT_PAUSE_MIN_MS = 2_000;
-export const LEVEL_THREE_HIT_PAUSE_MAX_MS = 3_000;
+export const LEVEL_THREE_HIT_PAUSE_MIN_MS = 1_000;
+export const LEVEL_THREE_HIT_PAUSE_MAX_MS = 1_000;

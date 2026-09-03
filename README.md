@@ -1,31 +1,29 @@
-# Throw Eggs at Anish Menon — V8.5
+# Throw Eggs at Anish Menon — V8.6 Final
 
-This is the V8 Premium old-feel hybrid with:
+This is the final three-level V8 Premium build.
 
-- fullscreen request on **START THROWING**
-- animated **PREPARING EGGS** loading screen
-- old double-layer slingshot construction and reveal bounce
-- old-style launch / impact sound design
-- hit-stop, screen shake, white flash, zoom punch, shell fragments and persistent yolk splats
-- **OPENING STRONG AANU.** with the smaller `reviews pending` subline
-- enforced scripted dodges that cannot be bypassed by an oversized collision zone
+## Campaign order
 
-## Current campaign
+### Level 1 — Office
+- clock advances through **9:00, 9:30, 10:00, 10:30, 11:00 and 11:07**
+- Anish walks in with his bags
+- five successful hits
+- old-feel fullscreen, slingshot, loading screen, sound and impact feedback remain intact
 
-### Level 1
-Five successful hits. Scripted threatening attempts 2, 4 and 5 are dodged; the opening attempt is a forced hit.
+### Level 2 — Two Drinks / Boring Story
+- the older restaurant-activation story is restored
+- story lasts **30 seconds**
+- player needs **10 successful hits**
+- threatening attempts **1, 3 and 7** are compulsory drunken dodges
+- every hit quietly pauses narration for **one second**
+- story resumes from the same point and never restarts
+- no interruption timer is shown
 
-### Level 2
-Five successful hits within an absolute 10-second cash deadline. Threatening attempts 1 and 4 are dodged.
-
-### Level 3
-Ten successful hits before a 25-second story completes.
-
-- threatening attempts **1, 3 and 7** are compulsory dodges
-- each successful hit pauses narration for **2–3 seconds**
-- narration resumes from the same point rather than restarting
-- Anish continues moving while interrupted
-- the tenth hit finally stops the story
+### Level 3 — Cash Chase
+- now the final and hardest level
+- Anish reaches the cash in **20 seconds**
+- player needs **5 successful hits**
+- threatening attempts **1 and 4** are compulsory dodges
 
 ## Deploy on Vercel
 

@@ -1,6 +1,6 @@
 {
   "name": "throw-eggs-at-anish",
-  "version": "8.5.0",
+  "version": "8.6.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,5 @@
   "engines": {
     "node": ">=20"
   },
-  "description": "V8 Premium old-feel hybrid with a ten-hit Level 3, exact forced dodges, and non-resetting story interruptions."
+  "description": "Final three-level V8 build: office arrival, 30-second story challenge, then a 20-second cash chase."
 }

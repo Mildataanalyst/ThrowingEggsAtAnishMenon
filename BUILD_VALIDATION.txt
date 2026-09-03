@@ -1,28 +1,19 @@
-THROW EGGS AT ANISH — V8.5 VALIDATION
-Generated: 2026-09-03
+Throw Eggs at Anish Menon — V8.6 Final
 
-STATIC AND LOGIC CHECKS
-- node --check src/game.js: PASS
-- node --check src/audio.js: PASS
-- node --check src/difficulty.js: PASS
-- required project files: PASS
-- dependency-free npm run build: PASS
+VALIDATED
+- npm run check: PASS
+- npm run build: PASS
+- JavaScript syntax: PASS
+- required deployment files: PASS
+- campaign order: office -> story -> cash
+- clock sequence: 9:00 -> 9:30 -> 10:00 -> 10:30 -> 11:00 -> 11:07
+- story duration: 30 seconds
+- story required hits: 10
+- story forced dodges: threatening attempts 1, 3, 7
+- story hit pause: 1 second, not shown on-screen
+- money duration: 20 seconds
+- money required hits: 5
+- money forced dodges: threatening attempts 1, 4
+- final note and Play Again: present
 
-EXACT SCRIPTED SEQUENCES
-- Level 1: hit, dodge, normal, dodge, dodge, normal: PASS
-- Level 2: dodge, normal, normal, dodge, normal: PASS
-- Level 3: dodge on threatening attempts 1, 3 and 7 only: PASS
-
-LEVEL 3 RULES
-- target raised from 5 to 10 successful hits: PASS
-- story duration remains 25 seconds: PASS
-- story begins immediately when gameplay starts: PASS
-- successful hit does not reset storyProgress: PASS
-- successful hit adds a random 2–3 second interruption: PASS
-- consecutive hits stack their delay: PASS
-- Anish movement continues during interruption: PASS
-- HUD reports /10: PASS
-- interruption countdown is drawn in the story card: PASS
-
-RUNTIME LIMITATION
-- A local Chromium end-to-end run could not be executed in this container because its managed browser policy blocks localhost and file URLs. Static syntax, exact sequence, source-structure and build checks were used instead.
+Browser automation could not load localhost or file URLs because the managed Chromium runtime blocks them administratively. Static build and deterministic source assertions completed successfully.
