@@ -1,4 +1,15 @@
 import { SoundFX } from './audio.js';
+import {
+  LEVEL_THREE_HIT_PAUSE_MAX_MS,
+  LEVEL_THREE_HIT_PAUSE_MIN_MS,
+  LEVEL_THREE_HITS_REQUIRED,
+  LEVEL_THREE_STORY_DURATION_MS,
+  LEVEL_TWO_DURATION_MS,
+  modeForAttempt,
+  normalAssistFor
+} from './difficulty.js';
+
+window.__ANISH_GAME_VERSION__ = '8.5.0';
 
 const W = 430;
 const H = 780;
@@ -16,18 +27,23 @@ const COLORS = {
 
 const STORY = `Okay, so I went to this restaurant for an activation, right? We had a standee, a promoter, one extension board, three unnecessary opinions, and a QR code nobody scanned except a waiter who looked guilty for me. Then Anish said the real problem was brand visibility, but the actual tragedy was that he had still not reached the point. Anyway, the real story starts with the parking issue, then a detour into box office math, then a deeply avoidable note on margins.`;
 const STORY_WORDS = STORY.split(/\s+/);
-const RESTART_LINES = [
-  'BRO, YOU CANNOT INTERRUPT CINEMA.',
-  'LET ME BUILD THE WORLD FIRST.',
-  'THIS WAS ABOUT TO PAY OFF EMOTIONALLY.',
-  'YOU PEOPLE DO NOT RESPECT NARRATIVE.'
+const INTERRUPTION_LINES = [
+  'RUDE. WHERE WAS I?',
+  'I AM STILL TELLING THIS STORY.',
+  'ANYWAY, AS I WAS SAYING…',
+  'YOU HAVE ONLY DELAYED THE POINT.',
+  'I AM GETTING VERY ANGRY NOW.',
+  'THE STORY IS NOT OVER.',
+  'BRO, LET ME FINISH.',
+  'THIS IS WHY CONTEXT MATTERS.',
+  'YOU CANNOT SILENCE CINEMA.',
+  'FINE. STORY OVER.'
 ];
-const L3_STORY_DURATION = 25000;
+const L3_STORY_DURATION = LEVEL_THREE_STORY_DURATION_MS;
 const L3_DRUNK_DODGE_LINES = [
   'DRUNKENLY AVOIDED.',
   'I AM SWAYING, NOT LOSING.',
-  'YOU CANNOT EGG PURE VIBES.',
-  'THAT ONE MISSED ON CINEMATIC GROUNDS.'
+  'YOU CANNOT EGG PURE VIBES.'
 ];
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -150,6 +166,9 @@ class EggGame {
     this.l2CredibleShots = 0;
     this.l2NextDuckAt = 0;
     this.l2TargetGlow = 0;
+    this.l2StartedAt = 0;
+    this.l2DeadlineAt = 0;
+    this.l2Knockback = 0;
 
     this.l3Hits = 0;
     this.storyProgress = 0;
@@ -158,6 +177,7 @@ class EggGame {
     this.l3NextTurnAt = 0;
     this.l3NextDuckAt = 0;
     this.l3CredibleShots = 0;
+    this.l3LastPauseMs = 0;
 
     this.soundButton.addEventListener('click', () => {
       this.sound.unlock();
@@ -201,6 +221,8 @@ class EggGame {
           l2CredibleShots: this.l2CredibleShots,
           l3Hits: this.l3Hits,
           l3CredibleShots: this.l3CredibleShots,
+          l3StoryProgressMs: Math.round(this.storyProgress),
+          l3StoryPausedForMs: Math.max(0, Math.round(this.storyResumeAt - this.now)),
           shotMode: this.activeShot?.mode ?? null,
           shotIndex: this.activeShot?.credibleIndex ?? null,
           eggReady: this.eggReady,
@@ -382,11 +404,14 @@ class EggGame {
     this.stateTime = 0;
     this.clearLevelVisuals();
     this.l2Hits = 0;
-    this.l2Progress = 0.015;
+    this.l2Progress = 0;
     this.l2FirstDuckDone = false;
     this.l2CredibleShots = 0;
-    this.l2NextDuckAt = this.now + 1100;
+    this.l2NextDuckAt = this.now + 1050;
     this.l2TargetGlow = 0;
+    this.l2StartedAt = this.now;
+    this.l2DeadlineAt = this.now + LEVEL_TWO_DURATION_MS;
+    this.l2Knockback = 0;
     this.configureCharacter({ x: 68, y: 520, scale: 0.345, rotation: 0.04, alpha: 1 });
     this.character.briefcase = true;
     this.launcherRevealAt = this.now;
@@ -434,9 +459,9 @@ class EggGame {
       eyebrow: 'LEVEL 3',
       title: 'HE HAS HAD<br>TWO DRINKS.',
       compact: true,
-      body: 'Now he wants to tell a long activation story nobody asked for, needed, or consented to.<br><strong>Interrupt him before the audience fully gives up. You need 5 hits, and he will drunkenly dodge some of them.</strong>',
+      body: 'Now he wants to tell a long activation story nobody asked for, needed, or consented to.<br><strong>Hit him 10 times before the 25-second story ends. Every hit interrupts him for 2–3 seconds, but he resumes from the same point.</strong>',
       button: 'SAVE THE AUDIENCE',
-      micro: '5 HITS · 25 SECONDS · DODGES RESET YOUR RHYTHM',
+      micro: '10 HITS · STORY PAUSES, NEVER RESTARTS',
       onClick: () => this.startLevel3()
     });
   }
@@ -448,11 +473,12 @@ class EggGame {
     this.clearLevelVisuals();
     this.l3Hits = 0;
     this.l3CredibleShots = 0;
+    this.l3LastPauseMs = 0;
     this.storyProgress = 0;
-    this.storyResumeAt = this.now + 650;
+    this.storyResumeAt = this.now;
     this.l3TargetX = 215;
     this.l3NextTurnAt = this.now + 760;
-    this.l3NextDuckAt = this.now + 1350;
+    this.l3NextDuckAt = 0;
     this.configureCharacter({ x: 215, y: 558, scale: 0.355, rotation: -0.04, alpha: 1 });
     this.character.drink = true;
     this.character.anger = 0;
@@ -589,23 +615,23 @@ class EggGame {
     let rx;
     let ry;
     if (this.state === 'l2_play') {
-      centerY = c.y - 118;
-      rx = 52;
-      ry = 104;
+      centerY = c.y - 120;
+      rx = 39;
+      ry = 80;
     } else if (this.state === 'l3_play') {
-      centerY = c.y - 138;
-      rx = 58;
-      ry = 118;
+      centerY = c.y - 140;
+      rx = 40;
+      ry = 86;
     } else {
       centerY = c.y - 148;
-      rx = 60;
-      ry = 128;
+      rx = 44;
+      ry = 96;
     }
 
     if (c.duck > 0.35) {
-      centerY += 72 * c.duck;
-      ry *= lerp(1, 0.44, c.duck);
-      rx *= lerp(1, 1.08, c.duck);
+      centerY += 76 * c.duck;
+      ry *= lerp(1, 0.36, c.duck);
+      rx *= lerp(1, 1.05, c.duck);
     }
     return { x: c.x, y: centerY, rx, ry };
   }
@@ -623,71 +649,64 @@ class EggGame {
   aimQuality(geometry) {
     const hitbox = this.characterHitbox();
     let best = Infinity;
-    for (let i = 7; i <= 30; i += 1) {
-      const t = i / 30;
-      const p = this.pointOnPath(geometry, t);
+    for (let i = 6; i <= 32; i += 1) {
+      const t = i / 32;
+      const point = this.pointOnPath(geometry, t);
       const norm = Math.sqrt(
-        Math.pow((p.x - hitbox.x) / (hitbox.rx * 1.14), 2) +
-        Math.pow((p.y - hitbox.y) / (hitbox.ry * 1.08), 2)
+        Math.pow((point.x - hitbox.x) / (hitbox.rx * 1.75), 2) +
+        Math.pow((point.y - hitbox.y) / (hitbox.ry * 1.55), 2)
       );
       best = Math.min(best, norm);
     }
     return best;
   }
 
-  determineShotMode(credible, credibleIndex = 0) {
-    if (!credible) return 'normal';
+  determineShotMode(threatening, attemptIndex = 0) {
+    if (!threatening) return 'normal';
+    return modeForAttempt(this.state, attemptIndex);
+  }
 
-    if (this.state === 'l1_play') {
-      if (credibleIndex === 1) return 'forceHit';
-      if ([2, 4, 5].includes(credibleIndex)) return 'forceDodge';
-      return 'normal';
-    }
+  nextThreatAttemptIndex() {
+    if (this.state === 'l1_play') return ++this.l1CredibleShots;
+    if (this.state === 'l2_play') return ++this.l2CredibleShots;
+    if (this.state === 'l3_play') return ++this.l3CredibleShots;
+    return 0;
+  }
 
-    if (this.state === 'l2_play') {
-      if ([1, 4].includes(credibleIndex)) return 'forceDodge';
-      return 'normal';
-    }
-
-    if (this.state === 'l3_play') {
-      if (credibleIndex === 1) return 'forceHit';
-      if ([2, 3, 5].includes(credibleIndex)) return 'forceDodge';
-      return 'normal';
-    }
-
-    return 'normal';
+  promoteShotToThreat(shot) {
+    if (!shot || shot.credibleIndex > 0) return shot?.mode ?? 'normal';
+    const attemptIndex = this.nextThreatAttemptIndex();
+    shot.credible = true;
+    shot.credibleIndex = attemptIndex;
+    shot.mode = this.determineShotMode(true, attemptIndex);
+    shot.assist = shot.mode === 'forceHit'
+      ? 1
+      : shot.mode === 'forceDodge'
+        ? 0.18
+        : normalAssistFor(this.state);
+    return shot.mode;
   }
 
   releaseShot() {
     const geometry = this.makeShotGeometry();
     const quality = this.aimQuality(geometry);
-    const credible = geometry.strength >= 0.25 && quality < 1.72;
+    const threatening = geometry.strength >= 0.28 && quality <= 1;
 
-    let credibleIndex = 0;
-    if (credible && this.state === 'l1_play') credibleIndex = ++this.l1CredibleShots;
-    if (credible && this.state === 'l2_play') credibleIndex = ++this.l2CredibleShots;
-    if (credible && this.state === 'l3_play') credibleIndex = ++this.l3CredibleShots;
-
-    const mode = this.determineShotMode(credible, credibleIndex);
-    let assist = 0;
-
-    if (mode === 'forceHit') assist = 1;
-    else if (credible) {
-      if (this.state === 'l1_play') assist = 0.24;
-      if (this.state === 'l2_play') assist = 0.20;
-      if (this.state === 'l3_play') assist = 0.14;
-    }
-
-    this.activeShot = {
+    const shot = {
       ...geometry,
       elapsed: 0,
       duration: lerp(640, 470, geometry.strength),
-      mode,
-      credible,
-      credibleIndex,
-      assist,
+      mode: 'normal',
+      credible: false,
+      credibleIndex: 0,
+      quality,
+      assist: 0,
       dodgeTriggered: false
     };
+
+    if (threatening) this.promoteShotToThreat(shot);
+
+    this.activeShot = shot;
     this.eggReady = false;
     this.dragging = false;
     this.totalThrows += 1;
@@ -703,6 +722,34 @@ class EggGame {
     if (line) this.showSpeech(line, 1800);
   }
 
+  triggerScriptedDodge(shot) {
+    if (!shot || shot.dodgeTriggered) return;
+    shot.dodgeTriggered = true;
+
+    if (this.state === 'l1_play') {
+      const line = shot.credibleIndex === 2
+        ? 'YOU DIDN’T THINK IT WOULD BE THAT EASY, DID YOU?'
+        : shot.credibleIndex === 4
+          ? 'NOT IN THE MEDIA PLAN.'
+          : 'HAPPY BIRTHDAY TO ME.';
+      this.triggerDuck(760, line);
+      return;
+    }
+
+    if (this.state === 'l2_play') {
+      const line = shot.credibleIndex === 1 ? 'MONEY MAKES ME QUICK.' : 'THE MARGIN MADE ME MOVE.';
+      this.triggerDuck(720, line);
+      this.l2FirstDuckDone = true;
+      this.l2NextDuckAt = this.now + rand(900, 1450);
+      return;
+    }
+
+    if (this.state === 'l3_play') {
+      const line = L3_DRUNK_DODGE_LINES[Math.floor(Math.random() * L3_DRUNK_DODGE_LINES.length)];
+      this.triggerDuck(700, line);
+    }
+  }
+
   updateShot(dt) {
     const shot = this.activeShot;
     if (!shot) {
@@ -714,25 +761,20 @@ class EggGame {
 
     shot.elapsed += dt * 1000;
     const t = clamp(shot.elapsed / shot.duration, 0, 1);
+    const strict = this.characterHitbox();
 
-    if (shot.mode === 'forceDodge' && !shot.dodgeTriggered && t >= 0.50) {
-      shot.dodgeTriggered = true;
-      if (this.state === 'l1_play') {
-        const line = shot.credibleIndex === 2
-          ? 'YOU DIDN’T THINK IT WOULD BE THAT EASY, DID YOU?'
-          : shot.credibleIndex === 4
-            ? 'NOT IN THE MEDIA PLAN.'
-            : 'HAPPY BIRTHDAY TO ME.';
-        this.triggerDuck(760, line);
-      } else if (this.state === 'l2_play') {
-        const line = shot.credibleIndex === 1 ? 'MONEY MAKES ME QUICK.' : 'THE MARGIN MADE ME MOVE.';
-        this.triggerDuck(720, line);
-        this.l2FirstDuckDone = true;
-        this.l2NextDuckAt = this.now + rand(850, 1350);
-      } else if (this.state === 'l3_play') {
-        const line = L3_DRUNK_DODGE_LINES[Math.floor(Math.random() * L3_DRUNK_DODGE_LINES.length)];
-        this.triggerDuck(700, line);
-      }
+    // Any egg genuinely entering Anish's vicinity becomes a scripted attempt.
+    // This closes the previous loophole: a throw could be judged "not credible"
+    // on release, then still touch the oversized hitbox and bypass a forced dodge.
+    const rawPoint = this.pointOnPath(shot, t);
+    const warningNorm = Math.pow((rawPoint.x - strict.x) / (strict.rx * 1.72), 2) +
+      Math.pow((rawPoint.y - strict.y) / (strict.ry * 1.52), 2);
+    if (shot.credibleIndex === 0 && t >= 0.18 && warningNorm <= 1) {
+      this.promoteShotToThreat(shot);
+    }
+
+    if (shot.mode === 'forceDodge' && !shot.dodgeTriggered && (t >= 0.43 || warningNorm <= 0.56)) {
+      this.triggerScriptedDodge(shot);
     }
 
     const hitbox = this.characterHitbox();
@@ -755,21 +797,29 @@ class EggGame {
       this.trail.push({ x: point.x, y: point.y, born: this.now, life: 220 });
     }
 
-    if (shot.mode !== 'forceDodge' && t > 0.23) {
+    if (t > 0.20) {
       const current = this.characterHitbox();
       const norm = Math.pow((point.x - current.x) / current.rx, 2) +
         Math.pow((point.y - current.y) / current.ry, 2);
+
       if (norm <= 1) {
-        this.registerHit(point.x, point.y, shot);
-        return;
+        // No actual collision can bypass the scripted order.
+        if (shot.credibleIndex === 0) this.promoteShotToThreat(shot);
+        if (shot.mode === 'forceDodge') {
+          this.triggerScriptedDodge(shot);
+        } else {
+          this.registerHit(point.x, point.y, shot);
+          return;
+        }
       }
-      if (shot.mode === 'forceHit' && t > 0.8) {
+
+      if (shot.mode === 'forceHit' && t > 0.78) {
         this.registerHit(current.x, current.y, shot);
         return;
       }
     }
 
-    if (shot.mode === 'forceDodge' && shot.dodgeTriggered && t >= 0.76) {
+    if (shot.mode === 'forceDodge' && shot.dodgeTriggered && t >= 0.78) {
       this.finishShotAsMiss(point.x, point.y, shot, true);
       return;
     }
@@ -814,20 +864,25 @@ class EggGame {
       if (this.l1Hits >= 5) this.pendingCompleteAt = this.now + 820;
     } else if (this.state === 'l2_play') {
       this.l2Hits += 1;
-      this.l2Progress = Math.max(0.01, this.l2Progress - 0.155);
+      this.l2Knockback = Math.min(42, this.l2Knockback + 28);
       this.l2TargetGlow = 1;
-      this.l2NextDuckAt = this.now + rand(850, 1350);
+      this.l2NextDuckAt = this.now + rand(800, 1250);
       const lines = ['THAT CASH HAD CHOSEN ME.', 'LET ME JUST REACH THE MONEY ONCE.', 'THIS IS ANTI-GROWTH BEHAVIOUR.', 'YOU HAVE NO RESPECT FOR CAPITAL FORMATION.', 'I COULD ALREADY TASTE THE MARGIN.'];
       this.showSpeech(lines[(this.l2Hits - 1) % lines.length], 1240);
       if (this.l2Hits >= 5) this.pendingCompleteAt = this.now + 860;
     } else if (this.state === 'l3_play') {
       this.l3Hits += 1;
-      this.storyProgress = 0;
-      this.storyResumeAt = this.now + 1000;
-      this.character.anger = Math.min(1, this.character.anger + 0.22);
-      this.character.blush = Math.min(1, this.character.blush + 0.28);
-      this.showSpeech(RESTART_LINES[(this.l3Hits - 1) % RESTART_LINES.length], 1620);
-      if (this.l3Hits >= 5) this.pendingCompleteAt = this.now + 900;
+      const pauseMs = Math.round(rand(
+        LEVEL_THREE_HIT_PAUSE_MIN_MS,
+        LEVEL_THREE_HIT_PAUSE_MAX_MS
+      ));
+      this.l3LastPauseMs = pauseMs;
+      this.storyResumeAt = Math.max(this.storyResumeAt, this.now) + pauseMs;
+      this.character.anger = Math.min(1, this.character.anger + 0.11);
+      this.character.blush = Math.min(1, this.character.blush + 0.13);
+      const line = INTERRUPTION_LINES[Math.min(this.l3Hits - 1, INTERRUPTION_LINES.length - 1)];
+      this.showSpeech(line, this.l3Hits >= LEVEL_THREE_HITS_REQUIRED ? 1120 : 1450);
+      if (this.l3Hits >= LEVEL_THREE_HITS_REQUIRED) this.pendingCompleteAt = this.now + 1050;
     }
   }
 
@@ -942,14 +997,14 @@ class EggGame {
   updateL1Play(dt) {
     if (this.now < this.freezeUntil) return;
     if (this.now >= this.l1NextTurnAt) {
-      this.l1TargetX = rand(124, 308);
-      this.l1NextTurnAt = this.now + rand(1150, 1800);
+      this.l1TargetX = rand(112, 318);
+      this.l1NextTurnAt = this.now + rand(760, 1280);
     }
-    const speed = 50 + this.l1Hits * 4;
+    const speed = 66 + this.l1Hits * 9;
     const dx = this.l1TargetX - this.character.x;
     this.character.vx = clamp(dx * 2.0, -speed, speed);
     this.character.x += this.character.vx * dt;
-    this.character.rotation = clamp(this.character.vx / 900, -0.05, 0.05);
+    this.character.rotation = clamp(this.character.vx / 760, -0.075, 0.075);
     if (this.pendingCompleteAt && this.now >= this.pendingCompleteAt) {
       this.pendingCompleteAt = 0;
       this.completeLevel1();
@@ -958,20 +1013,23 @@ class EggGame {
 
   updateL2Play(dt) {
     if (this.now < this.freezeUntil) return;
-    this.l2Progress = clamp(this.l2Progress + dt * 0.0985, 0, 1);
-    this.character.x = lerp(66, 355, this.l2Progress);
-    this.character.vx = 44;
-    this.character.rotation = 0.04 + Math.sin(this.stateTime * 0.008) * 0.016;
+
+    const elapsed = Math.max(0, this.now - this.l2StartedAt);
+    this.l2Progress = clamp(elapsed / LEVEL_TWO_DURATION_MS, 0, 1);
+    this.l2Knockback = Math.max(0, this.l2Knockback - dt * 38);
+    this.character.x = lerp(66, 355, this.l2Progress) - this.l2Knockback;
+    this.character.vx = 48;
+    this.character.rotation = 0.04 + Math.sin(this.stateTime * 0.009) * 0.02;
     this.l2TargetGlow = Math.max(0, this.l2TargetGlow - dt * 2.2);
 
-    if (this.l2FirstDuckDone && this.now >= this.l2NextDuckAt && this.character.duck < 0.12) {
-      const lines = ['NOT THIS TIME.', 'NICE TRY, BROKE BOY.', 'THE MONEY NEEDS ME MORE.', 'MONEY MAKES ME QUICK.'];
+    if (this.l2FirstDuckDone && this.now >= this.l2NextDuckAt && this.character.duck < 0.12 && !this.activeShot) {
+      const lines = ['NOT THIS TIME.', 'NICE TRY, BROKE BOY.', 'THE MONEY NEEDS ME MORE.', 'YOU CANNOT OUTTHROW GREED.'];
       const line = lines[Math.floor(Math.random() * lines.length)];
-      this.triggerDuck(540, line);
-      this.l2NextDuckAt = this.now + rand(850, 1350);
+      this.triggerDuck(520, line);
+      this.l2NextDuckAt = this.now + rand(800, 1300);
     }
 
-    if (this.l2Progress >= 1) {
+    if (this.now >= this.l2DeadlineAt || this.l2Progress >= 1) {
       this.failLevel2();
       return;
     }
@@ -991,12 +1049,12 @@ class EggGame {
     const dx = this.l3TargetX - this.character.x;
     this.character.vx = clamp(dx * 3.5, -142, 142);
     this.character.x += this.character.vx * dt;
-    this.character.rotation = Math.sin(this.stateTime * 0.0062) * 0.14 + Math.sin(this.stateTime * 0.020) * 0.065;
+    this.character.rotation = Math.sin(this.stateTime * 0.0062) * 0.14 +
+      Math.sin(this.stateTime * 0.020) * 0.065;
     this.character.y = 558 + Math.sin(this.stateTime * 0.0082) * 15;
-    if (this.now >= this.l3NextDuckAt && this.character.duck < 0.12 && !this.activeShot) {
-      this.triggerDuck(460 + rand(0, 240), null);
-      this.l3NextDuckAt = this.now + rand(900, 1450);
-    }
+
+    // A hit pauses only the narration. Anish keeps drunkenly moving, and once
+    // the pause ends he resumes from the exact word where he was interrupted.
     if (this.now >= this.storyResumeAt) this.storyProgress += dt * 1000;
 
     if (this.storyProgress >= L3_STORY_DURATION) {
@@ -1135,6 +1193,20 @@ class EggGame {
     ctx.textAlign = 'center';
     ctx.fillText('CAPITAL PURSUIT', 93, 39);
     ctx.fillText('NET WORTH SENSED', 340, 39);
+
+    const remainingMs = this.state === 'l2_play'
+      ? Math.max(0, this.l2DeadlineAt - this.now)
+      : LEVEL_TWO_DURATION_MS;
+    ctx.fillStyle = 'rgba(5,5,5,.74)';
+    roundedRect(ctx, 166, 58, 98, 38, 14);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,201,41,.34)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = COLORS.yellow;
+    ctx.font = '900 17px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${(remainingMs / 1000).toFixed(1)} SEC`, W / 2, 83);
 
     ctx.fillStyle = 'rgba(245,240,230,.045)';
     roundedRect(ctx, 26, 108, 118, 74, 12); ctx.fill();
@@ -1568,6 +1640,13 @@ class EggGame {
     ctx.font = '900 10px ui-monospace, monospace';
     ctx.textAlign = 'right';
     ctx.fillText(Math.ceil((L3_STORY_DURATION - this.storyProgress) / 1000) + ' SEC', x + width - 22, y + 14);
+
+    if (this.state === 'l3_play' && this.now < this.storyResumeAt) {
+      const pauseSeconds = Math.max(0, (this.storyResumeAt - this.now) / 1000);
+      ctx.fillStyle = COLORS.yellowDeep;
+      ctx.textAlign = 'left';
+      ctx.fillText('INTERRUPTED · ' + pauseSeconds.toFixed(1) + 'S', x + 22, y + height - 40);
+    }
     ctx.restore();
   }
 
@@ -1847,11 +1926,15 @@ class EggGame {
     ctx.fillStyle = COLORS.warmDim;
     if (level === 1) ctx.fillText('HIT HIM 5 TIMES', W / 2, 28);
     if (level === 2) ctx.fillText('KEEP HIM AWAY FROM THE MONEY', W / 2, 28);
-    if (level === 3) ctx.fillText('DON’T LET HIM FINISH THE STORY', W / 2, 28);
+    if (level === 3) ctx.fillText('10 HITS BEFORE THE STORY ENDS', W / 2, 28);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = COLORS.warm;
-    const counter = level === 1 ? (this.l1Hits + '/5') : level === 2 ? (this.l2Hits + '/5') : (this.l3Hits + '/5');
+    const counter = level === 1
+      ? (this.l1Hits + '/5')
+      : level === 2
+        ? (this.l2Hits + '/5')
+        : (this.l3Hits + '/' + LEVEL_THREE_HITS_REQUIRED);
     ctx.fillText('HITS ' + counter, W - 20, 27);
     ctx.restore();
   }

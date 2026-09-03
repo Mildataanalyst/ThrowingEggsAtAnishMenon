@@ -1,14 +1,14 @@
 {
   "name": "throw-eggs-at-anish",
-  "version": "8.3.0",
+  "version": "8.5.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check src/game.js && node --check src/audio.js && node scripts/check.mjs",
+    "check": "node --check src/game.js && node --check src/audio.js && node --check src/difficulty.js && node scripts/check.mjs",
     "build": "node scripts/build.mjs"
   },
   "engines": {
     "node": ">=20"
   },
-  "description": "V8 Premium with old-build fullscreen, loading, slingshot and impact feel."
+  "description": "V8 Premium old-feel hybrid with a ten-hit Level 3, exact forced dodges, and non-resetting story interruptions."
 }

@@ -1,38 +1,28 @@
-THROW EGGS AT ANISH — V5.1 VALIDATION
-Generated: 2026-09-02
+THROW EGGS AT ANISH — V8.5 VALIDATION
+Generated: 2026-09-03
 
-STATIC CHECKS
+STATIC AND LOGIC CHECKS
 - node --check src/game.js: PASS
 - node --check src/audio.js: PASS
-- project gameplay assertions: PASS
+- node --check src/difficulty.js: PASS
+- required project files: PASS
 - dependency-free npm run build: PASS
-- dist/ generated successfully: PASS
 
-BROWSER TESTS (HEADLESS CHROMIUM)
-- Home screen loads: PASS
-- START THROWING enters Level 1 clock: PASS
-- Level 1 completion card renders: PASS
-- THERE IS MORE changes directly to Level 2 intro: PASS
-- STOP HIM starts Level 2: PASS
-- Level 2 first credible shot is compulsorily ducked: PASS
-- Launcher reloads after the forced duck: PASS
-- Next credible Level 2 shot can hit: PASS
-- Periodic Level 2 duck occurs: PASS
-- Level 2 completion changes directly to Level 3 intro: PASS
-- INTERRUPT HIM starts Level 3: PASS
-- Level 3 egg hit resets story progress: PASS
-- Final birthday screen renders: PASS
-- Browser console errors during tested flow: 0
+EXACT SCRIPTED SEQUENCES
+- Level 1: hit, dodge, normal, dodge, dodge, normal: PASS
+- Level 2: dodge, normal, normal, dodge, normal: PASS
+- Level 3: dodge on threatening attempts 1, 3 and 7 only: PASS
 
-SCRIPTED SEQUENCE OBSERVATIONS
-- Level 1: Hit 1 -> compulsory duck -> Hit 2: PASS
-- Level 2: compulsory first duck -> normal hit -> periodic duck: PASS
-- Level 3: first valid debug throw registered one interruption and reset story: PASS
+LEVEL 3 RULES
+- target raised from 5 to 10 successful hits: PASS
+- story duration remains 25 seconds: PASS
+- story begins immediately when gameplay starts: PASS
+- successful hit does not reset storyProgress: PASS
+- successful hit adds a random 2–3 second interruption: PASS
+- consecutive hits stack their delay: PASS
+- Anish movement continues during interruption: PASS
+- HUD reports /10: PASS
+- interruption countdown is drawn in the story card: PASS
 
-ARCHITECTURE
-- Single canvas
-- Single in-memory state machine
-- Real DOM buttons
-- No Phaser scene switching
-- No URL/query-string level routing
-- No runtime dependencies
+RUNTIME LIMITATION
+- A local Chromium end-to-end run could not be executed in this container because its managed browser policy blocks localhost and file URLs. Static syntax, exact sequence, source-structure and build checks were used instead.

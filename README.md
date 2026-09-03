@@ -1,28 +1,35 @@
-# Throw Eggs at Anish Menon — V8.3 Old-Feel Hybrid
+# Throw Eggs at Anish Menon — V8.5
 
-This build keeps the current three-level V8 campaign and ports the specific interaction qualities from the older GitHub version:
+This is the V8 Premium old-feel hybrid with:
 
 - fullscreen request on **START THROWING**
 - animated **PREPARING EGGS** loading screen
 - old double-layer slingshot construction and reveal bounce
 - old-style launch / impact sound design
 - hit-stop, screen shake, white flash, zoom punch, shell fragments and persistent yolk splats
-- the old presentation of **OPENING STRONG AANU.** with the small `reviews pending` subline
+- **OPENING STRONG AANU.** with the smaller `reviews pending` subline
+- enforced scripted dodges that cannot be bypassed by an oversized collision zone
 
-Additional requested changes:
+## Current campaign
 
-- new office / movie-marketing / South India background with no `COMING SOON`
-- the opening clock is centered
-- `OFFICE OPENS — 10:30 AM`, then `WORK LOGIN — 11:07 AM`
-- title screen only shows the title and **START THROWING**
-- Level 1 removes the explanatory “first hit / dodge” microcopy
-- Level 1 credible throws 2, 4 and 5 are compulsory dodges; throw 1 is the opening hit
-- Level 2 credible throws 1 and 4 are compulsory dodges
-- first Level 2 forced dodge says **MONEY MAKES ME QUICK.**
+### Level 1
+Five successful hits. Scripted threatening attempts 2, 4 and 5 are dodged; the opening attempt is a forced hit.
 
-## Deploy
+### Level 2
+Five successful hits within an absolute 10-second cash deadline. Threatening attempts 1 and 4 are dodged.
 
-Use Vercel Framework Preset **Other**:
+### Level 3
+Ten successful hits before a 25-second story completes.
+
+- threatening attempts **1, 3 and 7** are compulsory dodges
+- each successful hit pauses narration for **2–3 seconds**
+- narration resumes from the same point rather than restarting
+- Anish continues moving while interrupted
+- the tenth hit finally stops the story
+
+## Deploy on Vercel
+
+Use Framework Preset **Other**:
 
 - Build command: `npm run build`
 - Output directory: `dist`
