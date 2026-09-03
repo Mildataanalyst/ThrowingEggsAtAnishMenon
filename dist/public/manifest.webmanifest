@@ -1,0 +1,9 @@
+{
+  "name": "Throw Eggs at Anish Menon",
+  "short_name": "Egg Anish",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": []
+}

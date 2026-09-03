@@ -1,0 +1,255 @@
+:root {
+  --ink: #050505;
+  --warm: #f5f0e6;
+  --graphite: #8c8982;
+  --yellow: #ffc929;
+  --app-height: 100dvh;
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+  overscroll-behavior: none;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  min-height: var(--app-height);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255,201,41,.08), transparent 32%),
+    radial-gradient(circle at 50% 110%, rgba(255,255,255,.04), transparent 24%),
+    #000;
+}
+
+button { font: inherit; }
+
+#app {
+  position: relative;
+  width: min(100vw, calc(var(--app-height) * 0.551282));
+  height: min(var(--app-height), calc(100vw * 1.813953));
+  max-width: 430px;
+  max-height: 780px;
+  overflow: hidden;
+  background: var(--ink);
+  border-radius: 28px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.06),
+    0 22px 80px rgba(0,0,0,.68),
+    0 0 80px rgba(255,201,41,.06);
+  isolation: isolate;
+}
+
+#app::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.04), transparent 10%),
+    linear-gradient(180deg, transparent 88%, rgba(255,255,255,.035));
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--ink);
+  touch-action: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: clamp(22px, 7vw, 40px);
+  background:
+    radial-gradient(circle at 50% 14%, rgba(255,201,41,.09), transparent 28%),
+    linear-gradient(180deg, rgba(2,2,2,.30) 0%, rgba(2,2,2,.54) 36%, rgba(2,2,2,.84) 100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 220ms ease, visibility 220ms step-end;
+}
+
+.overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 220ms ease;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 362px;
+  padding: 28px 24px 22px;
+  border: 1px solid rgba(245,240,230,.11);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(12,12,12,.68), rgba(8,8,8,.8));
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.06),
+    inset 0 -24px 40px rgba(255,201,41,.02);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  text-align: center;
+  transform: translateY(10px) scale(.985);
+  transition: transform 260ms cubic-bezier(.2,.8,.2,1);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  border-radius: 24px 24px 0 0;
+  background: linear-gradient(90deg, transparent, rgba(255,201,41,.85), transparent);
+}
+
+.overlay.visible .card { transform: translateY(0) scale(1); }
+
+.card .eyebrow {
+  margin: 0 0 16px;
+  color: var(--graphite);
+  font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+}
+
+.card h1 {
+  margin: 0;
+  color: var(--warm);
+  font-family: "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  font-size: clamp(33px, 9.5vw, 50px);
+  line-height: .96;
+  letter-spacing: .015em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.card h1.compact {
+  font-size: clamp(28px, 8.2vw, 42px);
+  line-height: 1.02;
+}
+
+.card .body {
+  max-width: 332px;
+  margin: 18px auto 0;
+  color: #d0ccc3;
+  font: 600 clamp(13px, 3.65vw, 16px)/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .005em;
+  text-wrap: pretty;
+}
+
+.card .body strong { color: var(--warm); }
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 220px;
+  min-height: 58px;
+  margin-top: 28px;
+  padding: 15px 28px;
+  border: 1px solid rgba(17,17,17,.08);
+  border-radius: 17px;
+  background: linear-gradient(180deg, #fffaf0 0%, var(--warm) 100%);
+  color: #151515;
+  font: 900 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 14px 38px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.45);
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+.primary:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #f7f1e7 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 42px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.5);
+}
+.primary:active { transform: translateY(2px) scale(.985); }
+
+.card .micro {
+  margin-top: 16px;
+  color: #66635e;
+  font: 700 10px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.sound-toggle {
+  position: absolute;
+  z-index: 40;
+  right: 14px;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(245,240,230,.22);
+  border-radius: 999px;
+  background: rgba(5,5,5,.72);
+  color: var(--warm);
+  font-weight: 900;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 10px 20px rgba(0,0,0,.24);
+}
+
+.sound-toggle.muted { color: #666; }
+
+.loading, .fatal {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: #050505;
+  color: #8c8982;
+  font: 800 11px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .18em;
+}
+
+.loading.hidden { display: none; }
+
+.fatal {
+  display: none;
+  align-content: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--warm);
+}
+
+.fatal.visible { display: grid; }
+.fatal span { color: var(--graphite); font-size: 12px; }
+
+@media (max-width: 480px) {
+  #app {
+    border-radius: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+  }
+}
+
+@media (max-height: 620px) {
+  .card { padding: 20px 20px 18px; }
+  .card .body { margin-top: 14px; line-height: 1.45; }
+  .primary { margin-top: 20px; min-height: 50px; }
+}

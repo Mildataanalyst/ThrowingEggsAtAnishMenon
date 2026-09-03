@@ -1,0 +1,38 @@
+THROW EGGS AT ANISH — V5.1 VALIDATION
+Generated: 2026-09-02
+
+STATIC CHECKS
+- node --check src/game.js: PASS
+- node --check src/audio.js: PASS
+- project gameplay assertions: PASS
+- dependency-free npm run build: PASS
+- dist/ generated successfully: PASS
+
+BROWSER TESTS (HEADLESS CHROMIUM)
+- Home screen loads: PASS
+- START THROWING enters Level 1 clock: PASS
+- Level 1 completion card renders: PASS
+- THERE IS MORE changes directly to Level 2 intro: PASS
+- STOP HIM starts Level 2: PASS
+- Level 2 first credible shot is compulsorily ducked: PASS
+- Launcher reloads after the forced duck: PASS
+- Next credible Level 2 shot can hit: PASS
+- Periodic Level 2 duck occurs: PASS
+- Level 2 completion changes directly to Level 3 intro: PASS
+- INTERRUPT HIM starts Level 3: PASS
+- Level 3 egg hit resets story progress: PASS
+- Final birthday screen renders: PASS
+- Browser console errors during tested flow: 0
+
+SCRIPTED SEQUENCE OBSERVATIONS
+- Level 1: Hit 1 -> compulsory duck -> Hit 2: PASS
+- Level 2: compulsory first duck -> normal hit -> periodic duck: PASS
+- Level 3: first valid debug throw registered one interruption and reset story: PASS
+
+ARCHITECTURE
+- Single canvas
+- Single in-memory state machine
+- Real DOM buttons
+- No Phaser scene switching
+- No URL/query-string level routing
+- No runtime dependencies
