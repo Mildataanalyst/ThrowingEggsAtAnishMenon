@@ -1,34 +1,25 @@
-# Throw Eggs at Anish Menon — V8.6 Final
+# Throw Eggs at Anish Menon — V8.7 Final
 
-This is the final three-level V8 Premium build.
+A portrait-first, three-level birthday game.
 
-## Campaign order
+## Campaign
 
-### Level 1 — Office
-- clock advances through **9:00, 9:30, 10:00, 10:30, 11:00 and 11:07**
-- Anish walks in with his bags
-- five successful hits
-- old-feel fullscreen, slingshot, loading screen, sound and impact feedback remain intact
+1. **Office arrival:** Anish reaches work late and gets welcomed with eggs.
+2. **Two drinks:** stop a painfully boring restaurant-activation story with ten successful hits.
+3. **Capital pursuit:** keep Anish away from the money.
 
-### Level 2 — Two Drinks / Boring Story
-- the older restaurant-activation story is restored
-- story lasts **30 seconds**
-- player needs **10 successful hits**
-- threatening attempts **1, 3 and 7** are compulsory drunken dodges
-- every hit quietly pauses narration for **one second**
-- story resumes from the same point and never restarts
-- no interruption timer is shown
+## V8.7 changes
 
-### Level 3 — Cash Chase
-- now the final and hardest level
-- Anish reaches the cash in **20 seconds**
-- player needs **5 successful hits**
-- threatening attempts **1 and 4** are compulsory dodges
+- Rewrote the restaurant-activation story so it has a clear setup, delay, eventual launch, and waiter-only QR-code payoff.
+- Tightened the final cash chase without displaying the hidden deadline anywhere in the interface.
+- Added a separate Level 3 completion card before the birthday note.
+- Added a global **EGGS THROWN AT ANISH SO FAR** counter under **START THROWING**.
+- The counter uses a public aggregate counter when available and falls back to a persistent browser-local count if the network request fails.
 
 ## Deploy on Vercel
 
-Use Framework Preset **Other**:
-
+- Framework preset: **Other**
 - Build command: `npm run build`
 - Output directory: `dist`
-- Root directory: the folder containing `package.json`
+
+The repository root should contain `package.json`, `index.html`, `src/`, `public/`, and `vercel.json`.

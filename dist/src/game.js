@@ -9,10 +9,13 @@ import {
   normalAssistFor
 } from './difficulty.js';
 
-window.__ANISH_GAME_VERSION__ = '8.6.0';
+window.__ANISH_GAME_VERSION__ = '8.7.0';
 
 const W = 430;
 const H = 780;
+const COUNTER_GET_URL = 'https://abacus.jasoncameron.dev/get/milan-anish-egg-game-2026-9f4c2d/eggs-thrown';
+const COUNTER_HIT_URL = 'https://abacus.jasoncameron.dev/hit/milan-anish-egg-game-2026-9f4c2d/eggs-thrown';
+const LOCAL_COUNTER_KEY = 'anish_eggs_thrown_local_v1';
 const COLORS = {
   ink: '#050505',
   warm: '#f5f0e6',
@@ -25,7 +28,7 @@ const COLORS = {
   green: '#85d975'
 };
 
-const STORY = `Okay, so I went to this restaurant for an activation, right? The standee was meant to arrive at seven, but the vendor called at seven fifteen because the auto took the wrong turn. Then the manager said the plug point near the entrance wasn’t working, so we moved the ring light six inches to the left. Anyway, after forty minutes, one person scanned the QR code—but it was the waiter.`;
+const STORY = `Okay, so I went to this restaurant for an activation, right? I reached before the standee, before the promoter, and apparently before anyone had told the restaurant there was an activation. I waited forever while the vendor blamed traffic, the manager searched for a plug point, and three people debated which way the QR stand should face. Eventually we got everything set up, switched on the ring light, straightened the standee, and waited for the crowd. After all that, exactly one person scanned the QR code. It was the waiter. He only did it because we kept staring at him.`;
 const STORY_WORDS = STORY.split(/\s+/);
 const INTERRUPTION_LINES = [
   'RUDE. WHERE WAS I?',
@@ -111,6 +114,9 @@ class EggGame {
     this.impactToast = null;
     this.launcherRevealAt = 0;
     this.totalThrows = 0;
+    this.localEggCount = this.readLocalEggCount();
+    this.globalEggCount = null;
+    this.counterRequestSerial = 0;
     this.soundUnlocked = false;
 
     this.sling = { x: 215, restY: 652, maxX: 94, maxY: 116 };
@@ -208,6 +214,7 @@ class EggGame {
       this.running = true;
       this.resetCampaign();
       this.showHome();
+      this.refreshGlobalEggCount();
       requestAnimationFrame((time) => this.loop(time));
       window.__ANISH_DEBUG__ = {
         state: () => this.state,
@@ -242,6 +249,85 @@ class EggGame {
     const width = Math.round(viewport?.width || window.innerWidth);
     document.documentElement.style.setProperty('--app-height', `${height}px`);
     document.documentElement.style.setProperty('--app-width', `${width}px`);
+  }
+
+
+  readLocalEggCount() {
+    try {
+      const value = Number.parseInt(window.localStorage.getItem(LOCAL_COUNTER_KEY) ?? '0', 10);
+      return Number.isFinite(value) && value >= 0 ? value : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  writeLocalEggCount() {
+    try {
+      window.localStorage.setItem(LOCAL_COUNTER_KEY, String(this.localEggCount));
+    } catch {}
+  }
+
+  displayEggCount() {
+    return Number.isFinite(this.globalEggCount) ? this.globalEggCount : this.localEggCount;
+  }
+
+  formatEggCount(value) {
+    return Math.max(0, Number(value) || 0).toLocaleString('en-IN');
+  }
+
+  counterMarkup() {
+    return `EGGS THROWN AT ANISH SO FAR · <span id="global-egg-count">${this.formatEggCount(this.displayEggCount())}</span>`;
+  }
+
+  updateCounterDisplay() {
+    const counter = document.getElementById('global-egg-count');
+    if (counter) counter.textContent = this.formatEggCount(this.displayEggCount());
+  }
+
+  async fetchCounter(url) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 3500);
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        mode: 'cors',
+        signal: controller.signal
+      });
+      if (!response.ok) throw new Error(`Counter request failed: ${response.status}`);
+      const data = await response.json();
+      const value = Number(data?.value);
+      return Number.isFinite(value) && value >= 0 ? value : null;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
+
+  async refreshGlobalEggCount() {
+    const requestId = ++this.counterRequestSerial;
+    try {
+      const value = await this.fetchCounter(COUNTER_GET_URL);
+      if (requestId !== this.counterRequestSerial || value === null) return;
+      this.globalEggCount = Math.max(value, this.globalEggCount ?? 0);
+      this.updateCounterDisplay();
+    } catch {
+      this.updateCounterDisplay();
+    }
+  }
+
+  recordEggThrow() {
+    this.localEggCount += 1;
+    this.writeLocalEggCount();
+    if (Number.isFinite(this.globalEggCount)) this.globalEggCount += 1;
+    this.updateCounterDisplay();
+
+    void this.fetchCounter(COUNTER_HIT_URL)
+      .then((value) => {
+        if (value === null) return;
+        this.globalEggCount = Math.max(value, this.globalEggCount ?? 0);
+        this.updateCounterDisplay();
+      })
+      .catch(() => {});
   }
 
 
@@ -314,13 +400,16 @@ class EggGame {
     this.stateTime = 0;
     this.configureCharacter({ x: 214, y: 535, scale: 0.39, rotation: -0.03, alpha: 1 });
     this.showCard({
+      eyebrow: 'MOVIES · MARKETING · MINOR VIOLENCE',
       title: 'THROW EGGS<br>AT ANISH MENON',
       button: 'START THROWING',
+      micro: this.counterMarkup(),
       onClick: () => {
         this.requestFullscreen();
         this.startLevel1Clock();
       }
     });
+    this.refreshGlobalEggCount();
   }
 
   startLevel1Clock() {
@@ -391,9 +480,9 @@ class EggGame {
       eyebrow: 'FINAL LEVEL · LEVEL 3',
       title: 'CAPITAL HAS BEEN<br>SPOTTED.',
       compact: true,
-      body: 'He has locked onto a nearby pile of money like it whispered “incentive” in his ear.<br><strong>You have 20 seconds. Hit him 5 times before he reaches the cash.</strong>',
+      body: 'He has locked onto a nearby pile of money like it whispered “incentive” in his ear.<br><strong>Hit him 5 times. Make sure he does not reach the money.</strong>',
       button: 'BLOCK THE CASH',
-      micro: '20 SECONDS · 5 HITS · HE DODGES A LOT',
+      micro: '5 HITS · HE DODGES A LOT',
       onClick: () => this.startLevel2()
     });
   }
@@ -441,10 +530,25 @@ class EggGame {
     this.eggReady = false;
     this.sound.success();
     this.showCard({
+      eyebrow: 'LEVEL 3 COMPLETE',
+      title: 'THE CAPITALIST<br>HAS BEEN KEPT AWAY<br>FROM THE MONEY.',
+      compact: true,
+      body: 'You have achieved something previously believed to be impossible for Anish.',
+      button: 'NEXT',
+      onClick: () => this.showFinalNote()
+    });
+  }
+
+  showFinalNote() {
+    this.state = 'final_note';
+    this.stateTime = 0;
+    this.clearLevelVisuals();
+    this.configureCharacter({ x: 214, y: 535, scale: 0.39, rotation: -0.03, alpha: 1 });
+    this.showCard({
       eyebrow: 'FINAL NOTE',
       title: 'HAPPY BIRTHDAY,<br>ANISH MENON.',
       compact: true,
-      body: 'Here’s to another year of coming to office at 11 a.m., watching a hundred movies and pretending it’s work, loafing around — and continuing your friendship with Milan, your best decision in Eternal.<br><br><strong>Continue being this annoying.</strong> If you want to continue throwing eggs at him, press play again.',
+      body: 'Here’s to another year of coming to office at 11 a.m., watching a hundred movies and pretending it’s work, loafing around — and continuing your friendship with Milan, your best decision in Eternal.<br><br><strong>Continue being this annoying, and may many more eggs be thrown at your face.</strong>',
       button: 'PLAY AGAIN',
       onClick: () => {
         this.resetCampaign();
@@ -463,7 +567,7 @@ class EggGame {
       eyebrow: 'LEVEL 2',
       title: 'HE HAS HAD<br>TWO DRINKS.',
       compact: true,
-      body: 'Now he wants to tell the same painfully boring 30-second activation story.<br><strong>Hit him 10 times before he reaches the end. The story does not restart when you hit him.</strong>',
+      body: 'Now he wants to tell a painfully boring 30-second restaurant-activation story.<br><strong>Hit him 10 times before he reaches the end. The story does not restart when you hit him.</strong>',
       button: 'SAVE THE AUDIENCE',
       micro: '10 HITS · 30 SECONDS · STORY KEEPS GOING',
       onClick: () => this.startLevel3()
@@ -711,6 +815,7 @@ class EggGame {
     this.eggReady = false;
     this.dragging = false;
     this.totalThrows += 1;
+    this.recordEggThrow();
     this.drag.x = 0;
     this.drag.y = 0;
     this.sound.launch();
@@ -1198,20 +1303,6 @@ class EggGame {
     ctx.textAlign = 'center';
     ctx.fillText('CAPITAL PURSUIT', 93, 39);
     ctx.fillText('NET WORTH SENSED', 340, 39);
-
-    const remainingMs = this.state === 'l2_play'
-      ? Math.max(0, this.l2DeadlineAt - this.now)
-      : LEVEL_TWO_DURATION_MS;
-    ctx.fillStyle = 'rgba(5,5,5,.74)';
-    roundedRect(ctx, 166, 58, 98, 38, 14);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,201,41,.34)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.fillStyle = COLORS.yellow;
-    ctx.font = '900 17px ui-monospace, monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${(remainingMs / 1000).toFixed(1)} SEC`, W / 2, 83);
 
     ctx.fillStyle = 'rgba(245,240,230,.045)';
     roundedRect(ctx, 26, 108, 118, 74, 12); ctx.fill();
@@ -1982,7 +2073,7 @@ class EggGame {
 
     this.drawWorldSplats(ctx);
 
-    if (this.state === 'home') {
+    if (this.state === 'home' || this.state === 'final_note') {
       // Deliberately empty: the title and START THROWING are the only foreground elements.
     }
 
@@ -2044,7 +2135,7 @@ class EggGame {
       l3_intro: () => this.showLevel3Intro(),
       l3_play: () => this.startLevel3(),
       l3_complete: () => this.completeLevel3(),
-      final: () => this.completeLevel2()
+      final: () => this.showFinalNote()
     };
     actions[state]?.();
   }

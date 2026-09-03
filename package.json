@@ -1,6 +1,6 @@
 {
   "name": "throw-eggs-at-anish",
-  "version": "8.6.0",
+  "version": "8.7.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,5 @@
   "engines": {
     "node": ">=20"
   },
-  "description": "Final three-level V8 build: office arrival, 30-second story challenge, then a 20-second cash chase."
+  "description": "Final three-level V8 build with a global egg counter, coherent activation story, and a concealed faster cash chase."
 }

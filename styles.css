@@ -188,6 +188,11 @@ button { font: inherit; }
   text-transform: uppercase;
 }
 
+#global-egg-count {
+  color: var(--yellow);
+  font-variant-numeric: tabular-nums;
+}
+
 .sound-toggle {
   position: fixed;
   z-index: 40;
