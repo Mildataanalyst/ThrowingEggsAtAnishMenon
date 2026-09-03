@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#050505" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="description" content="Throw eggs at Anish Menon — a three-level birthday game." />
   <meta property="og:title" content="Throw Eggs at Anish Menon" />
   <meta property="og:description" content="Three levels. One Anish. Several eggs." />
@@ -25,18 +22,9 @@
     </section>
 
     <button id="sound-toggle" class="sound-toggle" aria-label="Mute sound" title="Sound">♪</button>
-
-    <div id="loading" class="loading" aria-live="polite">
-      <div class="loading-lockup">
-        <div class="loading-egg" aria-hidden="true"></div>
-        <div>PREPARING EGGS</div>
-      </div>
-    </div>
-
-    <div id="rotate-device" aria-hidden="true">PORTRAIT WORKS BETTER</div>
-
+    <div id="loading" class="loading">LOADING ANISH…</div>
     <div id="fatal" class="fatal" role="alert">
-      <strong>THE EGG FAILED TO LOAD.</strong>
+      <strong>ANISH FAILED TO LOAD.</strong>
       <span>Refresh the page and try again.</span>
     </div>
   </main>

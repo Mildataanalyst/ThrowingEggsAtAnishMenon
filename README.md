@@ -1,37 +1,29 @@
-# Throw Eggs at Anish — V5.1
+# Throw Eggs at Anish Menon — V8.3 Old-Feel Hybrid
 
-A portrait-first, three-level birthday game.
+This build keeps the current three-level V8 campaign and ports the specific interaction qualities from the older GitHub version:
 
-## Levels
+- fullscreen request on **START THROWING**
+- animated **PREPARING EGGS** loading screen
+- old double-layer slingshot construction and reveal bounce
+- old-style launch / impact sound design
+- hit-stop, screen shake, white flash, zoom punch, shell fragments and persistent yolk splats
+- the old presentation of **OPENING STRONG AANU.** with the small `reviews pending` subline
 
-1. **Late Entry** — the clock starts at 9:30 AM; Anish arrives at 11:07 carrying two bags. The first credible throw hits, the next credible throw is compulsorily ducked, and the following credible throw hits.
-2. **Money** — Anish advances from the far left toward a glowing pile of money. His first credible throw is compulsorily ducked, and he continues to duck at readable periodic intervals. Five hits stop him; reaching the money ends the attempt.
-3. **Two Drinks** — Anish tries to finish a 30-second boring story. Every egg hit wipes the speech bubble and restarts the story. Five interruptions win.
+Additional requested changes:
 
-## Deployment on Vercel
+- new office / movie-marketing / South India background with no `COMING SOON`
+- the opening clock is centered
+- `OFFICE OPENS — 10:30 AM`, then `WORK LOGIN — 11:07 AM`
+- title screen only shows the title and **START THROWING**
+- Level 1 removes the explanatory “first hit / dodge” microcopy
+- Level 1 credible throws 2, 4 and 5 are compulsory dodges; throw 1 is the opening hit
+- Level 2 credible throws 1 and 4 are compulsory dodges
+- first Level 2 forced dodge says **MONEY MAKES ME QUICK.**
 
-1. Unzip this package.
-2. Upload the contents of `throw-eggs-at-anish-v5-1/` to the root of a GitHub repository.
-3. Import the repository in Vercel.
-4. Vercel reads `vercel.json`, runs `npm run build`, and serves `dist/`.
+## Deploy
 
-There are no runtime dependencies and no backend. The build script only copies the static project into `dist/`.
+Use Vercel Framework Preset **Other**:
 
-## Local test
-
-```bash
-npm run check
-npm run build
-python3 -m http.server 8080 -d dist
-```
-
-Open `http://localhost:8080`.
-
-## Design decisions
-
-- One canvas and one explicit state machine; no Phaser scene transitions and no query-string navigation.
-- Real DOM buttons for every inter-level action.
-- Black, warm white, graphite and yolk-yellow only.
-- Mobile pointer controls with a visible trajectory and modest aim assistance.
-- Level 2 adds a compulsory first duck plus periodic, telegraphed ducks.
-- Procedural sound only; no copyrighted soundtrack.
+- Build command: `npm run build`
+- Output directory: `dist`
+- Root directory: the folder containing `package.json`

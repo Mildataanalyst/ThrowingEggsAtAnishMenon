@@ -75,8 +75,7 @@ class EggGame {
 
     this.state = 'loading';
     this.stateTime = 0;
-    this.bootStartedAt = performance.now();
-    this.now = this.bootStartedAt;
+    this.now = performance.now();
     this.lastFrame = this.now;
     this.running = false;
 
@@ -89,11 +88,6 @@ class EggGame {
     this.reloadAt = 0;
     this.freezeUntil = 0;
     this.shake = 0;
-    this.impactFlash = 0;
-    this.impactZoom = 1;
-    this.impactZoomUntil = 0;
-    this.impactToast = null;
-    this.launcherRevealAt = 0;
     this.totalThrows = 0;
     this.soundUnlocked = false;
 
@@ -115,8 +109,7 @@ class EggGame {
       briefcase: false,
       drink: false,
       anger: 0,
-      blush: 0,
-      hitDirection: 1
+      blush: 0
     };
 
     this.worldSplats = [];
@@ -140,14 +133,12 @@ class EggGame {
     this.l1Hits = 0;
     this.l1Misses = 0;
     this.l1ScriptStage = 0;
-    this.l1CredibleShots = 0;
     this.l1TargetX = 215;
     this.l1NextTurnAt = 0;
 
     this.l2Hits = 0;
     this.l2Progress = 0.02;
     this.l2FirstDuckDone = false;
-    this.l2CredibleShots = 0;
     this.l2NextDuckAt = 0;
     this.l2TargetGlow = 0;
 
@@ -179,11 +170,6 @@ class EggGame {
         loadImage('./public/assets/anish.png'),
         loadImage('./public/assets/stage-background.jpg')
       ]);
-      const minimumLoadingTime = 880;
-      const elapsed = performance.now() - this.bootStartedAt;
-      if (elapsed < minimumLoadingTime) {
-        await new Promise((resolve) => window.setTimeout(resolve, minimumLoadingTime - elapsed));
-      }
       this.loading.classList.add('hidden');
       this.running = true;
       this.resetCampaign();
@@ -192,20 +178,7 @@ class EggGame {
       window.__ANISH_DEBUG__ = {
         state: () => this.state,
         go: (state) => this.debugGo(state),
-        fireAtAnish: () => this.debugFireAtAnish(),
-        snapshot: () => ({
-          state: this.state,
-          l1Hits: this.l1Hits,
-          l1CredibleShots: this.l1CredibleShots,
-          l2Hits: this.l2Hits,
-          l2CredibleShots: this.l2CredibleShots,
-          l3Hits: this.l3Hits,
-          l3CredibleShots: this.l3CredibleShots,
-          shotMode: this.activeShot?.mode ?? null,
-          shotIndex: this.activeShot?.credibleIndex ?? null,
-          eggReady: this.eggReady,
-          fullscreen: Boolean(document.fullscreenElement)
-        })
+        fireAtAnish: () => this.debugFireAtAnish()
       };
     } catch (error) {
       console.error(error);
@@ -215,33 +188,8 @@ class EggGame {
   }
 
   syncViewport() {
-    const viewport = window.visualViewport;
-    const height = Math.round(viewport?.height || window.innerHeight);
-    const width = Math.round(viewport?.width || window.innerWidth);
+    const height = Math.round(window.visualViewport?.height || window.innerHeight);
     document.documentElement.style.setProperty('--app-height', `${height}px`);
-    document.documentElement.style.setProperty('--app-width', `${width}px`);
-  }
-
-
-  requestFullscreen() {
-    const root = document.documentElement;
-    const request = root.requestFullscreen || root.webkitRequestFullscreen;
-    if (!document.fullscreenElement && request) {
-      try {
-        const result = request.call(root, { navigationUI: 'hide' });
-        result?.catch?.(() => {});
-      } catch {
-        try { request.call(root); } catch {}
-      }
-    }
-    if (screen.orientation?.lock) {
-      screen.orientation.lock('portrait').catch(() => {});
-    }
-    document.body.classList.add('immersive');
-    window.setTimeout(() => {
-      window.scrollTo?.(0, 1);
-      this.syncViewport();
-    }, 120);
   }
 
   resetCampaign() {
@@ -258,10 +206,6 @@ class EggGame {
     this.trail = [];
     this.speech = null;
     this.shake = 0;
-    this.impactFlash = 0;
-    this.impactZoom = 1;
-    this.impactZoomUntil = 0;
-    this.impactToast = null;
     this.freezeUntil = 0;
     this.pendingCompleteAt = 0;
   }
@@ -292,12 +236,12 @@ class EggGame {
     this.stateTime = 0;
     this.configureCharacter({ x: 214, y: 535, scale: 0.39, rotation: -0.03, alpha: 1 });
     this.showCard({
+      eyebrow: 'MOVIES · MARKETING · MINOR VIOLENCE',
       title: 'THROW EGGS<br>AT ANISH MENON',
+      body: 'A premium birthday intervention for South India\'s hardest-working non-worker.<br><br><strong>Three tiny tragedies:</strong> office arrival, money pursuit, and a drunk boring story.',
       button: 'START THROWING',
-      onClick: () => {
-        this.requestFullscreen();
-        this.startLevel1Clock();
-      }
+      micro: 'PULL BACK · AIM · HUMILIATE',
+      onClick: () => this.startLevel1Clock()
     });
   }
 
@@ -309,7 +253,6 @@ class EggGame {
     this.l1Hits = 0;
     this.l1Misses = 0;
     this.l1ScriptStage = 0;
-    this.l1CredibleShots = 0;
     this.clearLevelVisuals();
     this.configureCharacter({ x: -125, y: 520, scale: 0.41, rotation: 0, alpha: 0 });
     this.resetLauncher(false);
@@ -322,8 +265,9 @@ class EggGame {
       eyebrow: 'LEVEL 1',
       title: 'ANISH HAS CLOCKED IN.',
       compact: true,
-      body: 'It is 11:07. He has entered dramatically, carrying two bags and no urgency.<br><strong>He will spend his time loafing around instead of working. Now is an excellent time to throw eggs at his face.</strong>',
+      body: 'It is 11:07. He has entered dramatically, carrying two bags and no urgency.<br><strong>Now is an excellent time to throw eggs at his face.</strong>',
       button: 'START LEVEL 1',
+      micro: 'FIRST HIT IS EASY · THEN HE DODGES ONCE',
       onClick: () => this.startLevel1Play()
     });
   }
@@ -335,8 +279,6 @@ class EggGame {
     this.clearLevelVisuals();
     this.configureCharacter({ x: 215, y: 520, scale: 0.41, rotation: 0, alpha: 1 });
     this.character.bags = false;
-    this.l1CredibleShots = 0;
-    this.launcherRevealAt = this.now;
     this.l1TargetX = rand(140, 292);
     this.l1NextTurnAt = this.now + 1350;
     this.eggReady = true;
@@ -384,12 +326,10 @@ class EggGame {
     this.l2Hits = 0;
     this.l2Progress = 0.015;
     this.l2FirstDuckDone = false;
-    this.l2CredibleShots = 0;
     this.l2NextDuckAt = this.now + 1100;
     this.l2TargetGlow = 0;
     this.configureCharacter({ x: 68, y: 520, scale: 0.345, rotation: 0.04, alpha: 1 });
     this.character.briefcase = true;
-    this.launcherRevealAt = this.now;
     this.eggReady = true;
     this.tutorialUntil = this.now + 2500;
   }
@@ -457,7 +397,6 @@ class EggGame {
     this.character.drink = true;
     this.character.anger = 0;
     this.character.blush = 0;
-    this.launcherRevealAt = this.now;
     this.eggReady = true;
     this.tutorialUntil = this.now + 2100;
   }
@@ -510,8 +449,7 @@ class EggGame {
       briefcase: false,
       drink: false,
       anger: 0,
-      blush: 0,
-      hitDirection: 1
+      blush: 0
     });
   }
 
@@ -635,26 +573,25 @@ class EggGame {
     return best;
   }
 
-  determineShotMode(credible, credibleIndex = 0) {
-    if (!credible) return 'normal';
-
+  determineShotMode(credible) {
     if (this.state === 'l1_play') {
-      if (credibleIndex === 1) return 'forceHit';
-      if ([2, 4, 5].includes(credibleIndex)) return 'forceDodge';
+      if (!credible) return 'normal';
+      if (this.l1ScriptStage === 0) return 'forceHit';
+      if (this.l1ScriptStage === 1) return 'forceDodge';
       return 'normal';
     }
-
     if (this.state === 'l2_play') {
-      if ([1, 4].includes(credibleIndex)) return 'forceDodge';
+      if (credible && !this.l2FirstDuckDone) return 'forceDodge';
       return 'normal';
     }
-
     if (this.state === 'l3_play') {
-      if (credibleIndex === 1) return 'forceHit';
-      if ([2, 3, 5].includes(credibleIndex)) return 'forceDodge';
+      if (!credible) return 'normal';
+      if (this.l3CredibleShots === 0) return 'forceHit';
+      if (this.l3CredibleShots === 1) return 'forceDodge';
+      if (this.l3CredibleShots === 2) return 'forceDodge';
+      if (this.l3CredibleShots === 4) return 'forceDodge';
       return 'normal';
     }
-
     return 'normal';
   }
 
@@ -662,19 +599,13 @@ class EggGame {
     const geometry = this.makeShotGeometry();
     const quality = this.aimQuality(geometry);
     const credible = geometry.strength >= 0.25 && quality < 1.72;
-
-    let credibleIndex = 0;
-    if (credible && this.state === 'l1_play') credibleIndex = ++this.l1CredibleShots;
-    if (credible && this.state === 'l2_play') credibleIndex = ++this.l2CredibleShots;
-    if (credible && this.state === 'l3_play') credibleIndex = ++this.l3CredibleShots;
-
-    const mode = this.determineShotMode(credible, credibleIndex);
+    const mode = this.determineShotMode(credible);
     let assist = 0;
 
     if (mode === 'forceHit') assist = 1;
     else if (credible) {
-      if (this.state === 'l1_play') assist = 0.24;
-      if (this.state === 'l2_play') assist = 0.20;
+      if (this.state === 'l1_play') assist = 0.28;
+      if (this.state === 'l2_play') assist = 0.24;
       if (this.state === 'l3_play') assist = 0.14;
     }
 
@@ -684,10 +615,10 @@ class EggGame {
       duration: lerp(640, 470, geometry.strength),
       mode,
       credible,
-      credibleIndex,
       assist,
       dodgeTriggered: false
     };
+    if (this.state === 'l3_play' && credible) this.l3CredibleShots += 1;
     this.eggReady = false;
     this.dragging = false;
     this.totalThrows += 1;
@@ -718,17 +649,12 @@ class EggGame {
     if (shot.mode === 'forceDodge' && !shot.dodgeTriggered && t >= 0.50) {
       shot.dodgeTriggered = true;
       if (this.state === 'l1_play') {
-        const line = shot.credibleIndex === 2
-          ? 'YOU DIDN’T THINK IT WOULD BE THAT EASY, DID YOU?'
-          : shot.credibleIndex === 4
-            ? 'NOT IN THE MEDIA PLAN.'
-            : 'HAPPY BIRTHDAY TO ME.';
-        this.triggerDuck(760, line);
+        this.triggerDuck(760, 'YOU DIDN’T THINK IT WOULD BE THAT EASY, DID YOU?');
+        this.l1ScriptStage = 2;
       } else if (this.state === 'l2_play') {
-        const line = shot.credibleIndex === 1 ? 'MONEY MAKES ME QUICK.' : 'THE MARGIN MADE ME MOVE.';
-        this.triggerDuck(720, line);
+        this.triggerDuck(720, 'YOU CANNOT OUTTHROW GREED.');
         this.l2FirstDuckDone = true;
-        this.l2NextDuckAt = this.now + rand(850, 1350);
+        this.l2NextDuckAt = this.now + rand(3000, 4400);
       } else if (this.state === 'l3_play') {
         const line = L3_DRUNK_DODGE_LINES[Math.floor(Math.random() * L3_DRUNK_DODGE_LINES.length)];
         this.triggerDuck(700, line);
@@ -783,40 +709,25 @@ class EggGame {
     this.activeShot = null;
     this.reloadAt = this.now + 300;
     this.character.hit = 1;
-    this.character.hitDirection = x >= this.character.x ? -1 : 1;
-    this.character.hitUntil = this.now + 510;
-    this.freezeUntil = this.now + 74;
-    this.shake = 9;
-    this.impactFlash = 0.19;
-    this.impactZoom = 1.022;
-    this.impactZoomUntil = this.now + 100;
+    this.character.hitUntil = this.now + 440;
+    this.freezeUntil = this.now + 64;
+    this.shake = 8;
     this.sound.splat();
-    navigator.vibrate?.([18, 12, 28]);
-    this.impactToast = {
-      text: y < this.character.y - 105 ? 'FACE HIT' : 'DIRECT HIT',
-      x,
-      y: Math.max(108, y - 72),
-      born: this.now,
-      until: this.now + 430
-    };
+    navigator.vibrate?.(24);
     this.createImpact(x, y, true);
     this.addCharacterSplat();
 
     if (this.state === 'l1_play') {
       this.l1Hits += 1;
       if (shot.mode === 'forceHit' && this.l1ScriptStage === 0) this.l1ScriptStage = 1;
-      const lines = ['OPENING STRONG AANU.', 'THIS IS ABUSE DISGUISED AS FRIENDSHIP.', 'WE CAN STILL POSITION THIS AS BRANDING.', 'YOU PEOPLE ARE DEEPLY JOBLESS.', 'HAPPY BIRTHDAY TO ME.'];
-      if (this.l1Hits === 1) {
-        this.showSpeech('OPENING STRONG AANU.', 1180, { sub: 'reviews pending', legacy: true });
-      } else {
-        this.showSpeech(lines[Math.min(this.l1Hits - 1, lines.length - 1)], 1180);
-      }
+      const lines = ['OPENING STRONG AANU.', 'THIS IS ABUSE DISGUISED AS FRIENDSHIP.', 'WE CAN STILL POSITION THIS AS BRANDING.', 'YOU PEOPLE ARE DEEPLY JOBLESS.', 'HAPPY BIRTHDAY TO ME, APPARENTLY.'];
+      this.showSpeech(lines[Math.min(this.l1Hits - 1, lines.length - 1)], 1180);
       if (this.l1Hits >= 5) this.pendingCompleteAt = this.now + 820;
     } else if (this.state === 'l2_play') {
       this.l2Hits += 1;
       this.l2Progress = Math.max(0.01, this.l2Progress - 0.155);
       this.l2TargetGlow = 1;
-      this.l2NextDuckAt = this.now + rand(850, 1350);
+      this.l2NextDuckAt = this.now + rand(2400, 3600);
       const lines = ['THAT CASH HAD CHOSEN ME.', 'LET ME JUST REACH THE MONEY ONCE.', 'THIS IS ANTI-GROWTH BEHAVIOUR.', 'YOU HAVE NO RESPECT FOR CAPITAL FORMATION.', 'I COULD ALREADY TASTE THE MARGIN.'];
       this.showSpeech(lines[(this.l2Hits - 1) % lines.length], 1240);
       if (this.l2Hits >= 5) this.pendingCompleteAt = this.now + 860;
@@ -868,7 +779,7 @@ class EggGame {
       this.worldSplats.push({ x, y, r: rand(14, 24), alpha: 0.68, seed: Math.random() * Math.PI * 2 });
       if (this.worldSplats.length > 36) this.worldSplats.shift();
     }
-    for (let i = 0; i < 18; i += 1) {
+    for (let i = 0; i < 14; i += 1) {
       const angle = Math.random() * Math.PI * 2;
       const speed = rand(46, 160);
       this.particles.push({
@@ -878,20 +789,13 @@ class EggGame {
         life: rand(420, 760),
         born: this.now,
         r: rand(2, 6),
-        shell: i >= 11
+        shell: i > 9
       });
     }
   }
 
-  showSpeech(text, duration = 1400, { sub = '', legacy = false } = {}) {
-    this.speech = {
-      text,
-      sub,
-      legacy,
-      born: this.now,
-      duration,
-      until: this.now + duration
-    };
+  showSpeech(text, duration = 1400) {
+    this.speech = { text, until: this.now + duration };
   }
 
   updateCharacterAnimation(dt) {
@@ -905,8 +809,11 @@ class EggGame {
 
   updateL1Clock() {
     const times = [
-      { at: 0, label: 'OFFICE OPENS', value: '10:30 AM' },
-      { at: 2900, label: 'WORK LOGIN', value: '11:07 AM' }
+      { at: 0, label: 'OFFICE OPENS', value: '9:30 AM' },
+      { at: 2400, label: 'OFFICE OPENS', value: '10:00 AM' },
+      { at: 4600, label: 'OFFICE OPENS', value: '10:30 AM' },
+      { at: 6700, label: 'OFFICE OPENS', value: '11:00 AM' },
+      { at: 8600, label: 'WORK LOGIN', value: '11:07 AM' }
     ];
     let index = 0;
     for (let i = 0; i < times.length; i += 1) {
@@ -917,7 +824,7 @@ class EggGame {
       this.lastClockIndex = index;
       this.sound.tick();
     }
-    if (this.stateTime >= 5200) {
+    if (this.stateTime >= 10100) {
       this.state = 'l1_walk';
       this.stateTime = 0;
       this.configureCharacter({ x: -118, y: 520, scale: 0.41, rotation: 0, alpha: 1 });
@@ -965,7 +872,7 @@ class EggGame {
     this.l2TargetGlow = Math.max(0, this.l2TargetGlow - dt * 2.2);
 
     if (this.l2FirstDuckDone && this.now >= this.l2NextDuckAt && this.character.duck < 0.12) {
-      const lines = ['NOT THIS TIME.', 'NICE TRY, BROKE BOY.', 'THE MONEY NEEDS ME MORE.', 'MONEY MAKES ME QUICK.'];
+      const lines = ['NOT THIS TIME.', 'NICE TRY, BROKE BOY.', 'THE MONEY NEEDS ME MORE.', 'YOU CANNOT OUTTHROW GREED.'];
       const line = lines[Math.floor(Math.random() * lines.length)];
       this.triggerDuck(540, line);
       this.l2NextDuckAt = this.now + rand(850, 1350);
@@ -1028,12 +935,8 @@ class EggGame {
     this.updateCharacterAnimation(dt);
     this.updateShot(dt);
     this.updateParticles(dt);
-    this.shake = Math.max(0, this.shake - dt * 32);
-    this.impactFlash = Math.max(0, this.impactFlash - dt * 1.9);
-    const zoomTarget = this.now < this.impactZoomUntil ? 1.022 : 1;
-    this.impactZoom += (zoomTarget - this.impactZoom) * Math.min(1, dt * 18);
+    this.shake = Math.max(0, this.shake - dt * 30);
     if (this.speech && this.now >= this.speech.until) this.speech = null;
-    if (this.impactToast && this.now >= this.impactToast.until) this.impactToast = null;
 
     for (const particle of this.dust) {
       particle.y += particle.speed * dt;
@@ -1056,42 +959,111 @@ class EggGame {
 
   drawStagePosters(ctx) {
     ctx.save();
+    ctx.strokeStyle = 'rgba(245,240,230,.08)';
     ctx.fillStyle = 'rgba(245,240,230,.08)';
-    ctx.font = '900 9px ui-monospace, monospace';
+    ctx.font = '900 10px ui-monospace, monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('PAN-SOUTH', 326, 132);
-    ctx.fillText('STRATEGY', 326, 146);
-    ctx.strokeStyle = 'rgba(245,240,230,.10)';
-    ctx.lineWidth = 1.3;
+    ctx.fillText('PAN-SOUTH', 314, 126);
+    ctx.fillText('STRATEGY', 314, 141);
+    ctx.fillText('MOVIES', 74, 118);
+    ctx.fillText('MARKETING', 74, 133);
+    ctx.fillText('SOUTH INDIA', 74, 148);
+    ctx.fillText('CAMPAIGNS', 364, 118);
+    ctx.fillText('ACTIVATIONS', 364, 133);
+    ctx.fillText('THEATRICAL', 364, 148);
     ctx.beginPath();
-    ctx.moveTo(286, 152);
-    ctx.lineTo(254, 166);
-    ctx.lineTo(262, 158);
-    ctx.moveTo(254, 166);
-    ctx.lineTo(264, 173);
+    ctx.moveTo(276, 150);
+    ctx.lineTo(245, 161);
+    ctx.lineTo(252, 154);
+    ctx.moveTo(245, 161);
+    ctx.lineTo(252, 168);
     ctx.stroke();
+
+    ctx.fillStyle = 'rgba(245,240,230,.06)';
+    ctx.font = '900 10px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SOUTH CINEMA', 365, 212);
+    ctx.fillText('MADE LOUDER', 365, 226);
+    ctx.fillText('BOX OFFICE', 65, 214);
+    ctx.fillText('MEETING LATER', 65, 228);
+
     ctx.restore();
   }
 
   drawBackgroundStage(ctx) {
-    ctx.drawImage(this.assets.stage, 0, 0, W, H);
-    ctx.fillStyle = 'rgba(0,0,0,.12)';
+    ctx.drawImage(this.assets.stage, -5, -6, W + 10, H + 12);
+    ctx.fillStyle = 'rgba(0,0,0,.24)';
     ctx.fillRect(0, 0, W, H);
 
-    const centreGlow = ctx.createRadialGradient(215, 315, 16, 215, 330, 280);
-    centreGlow.addColorStop(0, 'rgba(245,240,230,.075)');
-    centreGlow.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = centreGlow;
-    ctx.fillRect(0, 80, W, 560);
+    const topFade = ctx.createLinearGradient(0, 0, 0, 140);
+    topFade.addColorStop(0, 'rgba(0,0,0,.58)');
+    topFade.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = topFade;
+    ctx.fillRect(0, 0, W, 140);
 
-    ctx.fillStyle = 'rgba(245,240,230,.15)';
+    const centerGlow = ctx.createRadialGradient(215, 260, 10, 215, 280, 360);
+    centerGlow.addColorStop(0, 'rgba(245,240,230,.16)');
+    centerGlow.addColorStop(0.36, 'rgba(245,240,230,.055)');
+    centerGlow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = centerGlow;
+    ctx.fillRect(0, 0, W, 620);
+
+    const spotlightLeft = ctx.createLinearGradient(48, 0, 126, 330);
+    spotlightLeft.addColorStop(0, 'rgba(255,201,41,.07)');
+    spotlightLeft.addColorStop(1, 'rgba(255,201,41,0)');
+    ctx.fillStyle = spotlightLeft;
+    ctx.beginPath();
+    ctx.moveTo(58, 0); ctx.lineTo(118, 0); ctx.lineTo(165, 300); ctx.lineTo(10, 300); ctx.closePath();
+    ctx.fill();
+
+    const spotlightRight = ctx.createLinearGradient(305, 0, 382, 330);
+    spotlightRight.addColorStop(0, 'rgba(255,201,41,.055)');
+    spotlightRight.addColorStop(1, 'rgba(255,201,41,0)');
+    ctx.fillStyle = spotlightRight;
+    ctx.beginPath();
+    ctx.moveTo(312, 0); ctx.lineTo(374, 0); ctx.lineTo(420, 300); ctx.lineTo(265, 300); ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(245,240,230,.05)';
+    roundedRect(ctx, 18, 22, 116, 24, 10); ctx.fill();
+    roundedRect(ctx, 296, 22, 116, 24, 10); ctx.fill();
+    ctx.fillStyle = 'rgba(245,240,230,.55)';
+    ctx.font = '800 9px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('MOVIES • MARKETING', 76, 38);
+    ctx.fillText('SOUTH INDIA • CHAOS', 354, 38);
+
+    ctx.fillStyle = 'rgba(245,240,230,.04)';
+    roundedRect(ctx, 126, 88, 178, 24, 12);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(245,240,230,.58)';
+    ctx.font = '900 10px ui-monospace, monospace';
+    ctx.fillText('ANISH MENON ENTERS OFFICE', 215, 104);
+
+    ctx.strokeStyle = 'rgba(245,240,230,.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(18, 523); ctx.lineTo(W - 18, 523);
+    ctx.moveTo(0, 652); ctx.lineTo(W, 652);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(245,240,230,.04)';
+    roundedRect(ctx, 26, 452, 78, 42, 10); ctx.fill();
+    roundedRect(ctx, 324, 452, 80, 42, 10); ctx.fill();
+    ctx.fillStyle = 'rgba(245,240,230,.48)';
+    ctx.font = '800 9px ui-monospace, monospace';
+    ctx.fillText('SOUTH', 65, 470); ctx.fillText('MOVIES', 65, 483);
+    ctx.fillText('MARKETING', 364, 470); ctx.fillText('OFFICE', 364, 483);
+
+    ctx.fillStyle = 'rgba(245,240,230,.18)';
     for (const dust of this.dust) {
-      ctx.globalAlpha = 0.06 + dust.r * 0.04;
+      ctx.globalAlpha = 0.08 + dust.r * 0.05;
       ctx.beginPath();
       ctx.arc(dust.x, dust.y, dust.r, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+
     this.drawStagePosters(ctx);
   }
 
@@ -1326,33 +1298,32 @@ class EggGame {
 
   drawClock(ctx, small = false) {
     const frame = this.clockFrame || { label: 'WORK LOGIN', value: '11:07 AM' };
-    const width = small ? 150 : 224;
-    const height = small ? 64 : 112;
+    const width = small ? 150 : 210;
+    const height = small ? 64 : 92;
     const x = (W - width) / 2;
-    const y = small ? 66 : (H - height) / 2 - 38;
+    const y = small ? 66 : 116;
     ctx.save();
-    ctx.fillStyle = small ? 'rgba(5,5,5,.74)' : 'rgba(5,5,5,.86)';
-    roundedRect(ctx, x, y, width, height, small ? 14 : 20);
+    ctx.fillStyle = small ? 'rgba(5,5,5,.72)' : 'rgba(5,5,5,.82)';
+    roundedRect(ctx, x, y, width, height, small ? 14 : 18);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(245,240,230,.18)';
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = 'rgba(245,240,230,.16)';
+    ctx.lineWidth = 1;
     ctx.stroke();
 
     ctx.textAlign = 'center';
     ctx.fillStyle = frame.label === 'WORK LOGIN' ? COLORS.yellow : COLORS.graphite;
     ctx.font = `${small ? 700 : 800} ${small ? 8.8 : 11}px ui-monospace, monospace`;
-    ctx.fillText(frame.label, W / 2, y + (small ? 20 : 30));
+    ctx.fillText(frame.label, W / 2, y + (small ? 20 : 27));
     ctx.fillStyle = COLORS.warm;
-    ctx.font = `900 ${small ? 22 : 38}px "Arial Narrow", Impact, sans-serif`;
-    ctx.fillText(frame.value, W / 2, y + (small ? 48 : 78));
-
+    ctx.font = `900 ${small ? 22 : 34}px "Arial Narrow", Impact, sans-serif`;
+    ctx.fillText(frame.value, W / 2, y + (small ? 48 : 68));
     if (!small) {
-      const p = clamp(this.stateTime / 5200, 0, 1);
+      const p = clamp(this.stateTime / 10100, 0, 1);
       ctx.fillStyle = 'rgba(245,240,230,.10)';
-      roundedRect(ctx, x + 24, y + height - 16, width - 48, 3, 2);
+      roundedRect(ctx, x + 18, y + height - 10, width - 36, 2, 1);
       ctx.fill();
       ctx.fillStyle = COLORS.yellow;
-      roundedRect(ctx, x + 24, y + height - 16, (width - 48) * p, 3, 2);
+      roundedRect(ctx, x + 18, y + height - 10, (width - 36) * p, 2, 1);
       ctx.fill();
     }
     ctx.restore();
@@ -1405,15 +1376,14 @@ class EggGame {
     const c = this.character;
     if (c.alpha <= 0.01) return;
     const bob = Math.sin(c.walkPhase * 2.1) * Math.min(3.4, Math.abs(c.vx) * 0.05);
-    const hitKick = c.hit * -11;
-    const recoilX = c.hit * 12 * (c.hitDirection ?? 1);
-    const rot = c.rotation + Math.sin(c.walkPhase) * Math.min(0.016, Math.abs(c.vx) * 0.00022) + c.hit * 0.13 * (c.hitDirection ?? 1);
-    const scaleX = c.scale * (1 + c.hit * 0.08);
-    const scaleY = c.scale * (1 - c.duck * 0.42 - c.hit * 0.13);
+    const hitKick = c.hit * -8;
+    const rot = c.rotation + Math.sin(c.walkPhase) * Math.min(0.016, Math.abs(c.vx) * 0.00022) + c.hit * 0.08;
+    const scaleX = c.scale * (1 + c.hit * 0.05);
+    const scaleY = c.scale * (1 - c.duck * 0.42 - c.hit * 0.06);
 
     ctx.save();
     ctx.globalAlpha = c.alpha;
-    ctx.translate(c.x + recoilX, c.y + bob + hitKick);
+    ctx.translate(c.x, c.y + bob + hitKick);
     ctx.rotate(rot);
     ctx.scale(scaleX, scaleY);
 
@@ -1573,119 +1543,103 @@ class EggGame {
 
   drawSlingshot(ctx) {
     if (!this.isPlaying()) return;
-
     const restX = this.sling.x;
-    const restY = 650;
+    const restY = this.sling.restY;
     const eggX = this.dragging ? restX + this.drag.x : restX;
     const eggY = this.dragging ? restY + this.drag.y : restY;
     const strength = this.dragging ? this.pullStrength() : 0;
-    const forkY = 670;
-    const leftForkX = 170 - strength * 4;
-    const rightForkX = 260 + strength * 4;
-    const joinY = 711;
+    const forkY = 664;
+    const leftForkX = 172 - strength * 5;
+    const rightForkX = 258 + strength * 5;
     const baseY = 790;
-
-    const revealT = this.launcherRevealAt
-      ? clamp((this.now - this.launcherRevealAt) / 430, 0, 1)
-      : 1;
-    const reveal = revealT < 1 ? easeOutBack(revealT) : 1;
-    const offsetY = (1 - reveal) * 46;
 
     if (this.dragging) this.drawTrajectory(ctx);
 
     ctx.save();
-    ctx.globalAlpha = clamp(revealT * 1.5, 0, 1);
-    ctx.translate(0, offsetY);
-
-    // Old-build egg shadow.
-    ctx.fillStyle = 'rgba(0,0,0,.46)';
+    ctx.fillStyle = 'rgba(0,0,0,.32)';
     ctx.beginPath();
-    ctx.ellipse(eggX, eggY + 36, 24, 5.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(restX, 752, 68, 18, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Old-build double-layer elastic bands.
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#1b1b1e';
+    ctx.strokeStyle = '#2b2b2e';
     ctx.lineWidth = 8;
     ctx.beginPath();
     ctx.moveTo(leftForkX, forkY);
-    ctx.lineTo(eggX - 15, eggY + 6);
+    ctx.lineTo(eggX - 14, eggY + 7);
     ctx.moveTo(rightForkX, forkY);
-    ctx.lineTo(eggX + 15, eggY + 6);
+    ctx.lineTo(eggX + 14, eggY + 7);
     ctx.stroke();
 
-    ctx.strokeStyle = '#a4a19a';
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(leftForkX, forkY);
-    ctx.lineTo(eggX - 15, eggY + 6);
-    ctx.moveTo(rightForkX, forkY);
-    ctx.lineTo(eggX + 15, eggY + 6);
-    ctx.stroke();
-
-    // Old-build thick dark silhouette, then warm-white core.
-    ctx.strokeStyle = '#111113';
-    ctx.lineWidth = 22;
-    ctx.beginPath();
-    ctx.moveTo(restX, baseY);
-    ctx.lineTo(restX, joinY);
-    ctx.lineTo(leftForkX, forkY);
-    ctx.moveTo(restX, joinY);
-    ctx.lineTo(rightForkX, forkY);
-    ctx.stroke();
-
-    ctx.strokeStyle = '#f4f0e6';
-    ctx.lineWidth = 7;
-    ctx.beginPath();
-    ctx.moveTo(restX, baseY);
-    ctx.lineTo(restX, joinY);
-    ctx.lineTo(leftForkX, forkY);
-    ctx.moveTo(restX, joinY);
-    ctx.lineTo(rightForkX, forkY);
-    ctx.stroke();
-
-    ctx.fillStyle = '#050505';
-    ctx.beginPath();
-    ctx.arc(leftForkX, forkY, 12, 0, Math.PI * 2);
-    ctx.arc(rightForkX, forkY, 12, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(245,240,230,.08)';
+    roundedRect(ctx, restX - 74, 724, 148, 17, 8);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(244,240,230,.78)';
+
+    const wood = ctx.createLinearGradient(restX, 690, restX, 790);
+    wood.addColorStop(0, '#fff9ef');
+    wood.addColorStop(0.36, '#e8e0d1');
+    wood.addColorStop(1, '#b9b3a8');
+    ctx.strokeStyle = wood;
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(restX, baseY);
+    ctx.lineTo(restX, 712);
+    ctx.lineTo(leftForkX, forkY);
+    ctx.moveTo(restX, 712);
+    ctx.lineTo(rightForkX, forkY);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(245,240,230,.38)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(leftForkX, forkY, 12, 0, Math.PI * 2);
-    ctx.arc(rightForkX, forkY, 12, 0, Math.PI * 2);
+    ctx.moveTo(restX, baseY);
+    ctx.lineTo(restX, 712);
+    ctx.lineTo(leftForkX, forkY);
+    ctx.moveTo(restX, 712);
+    ctx.lineTo(rightForkX, forkY);
     ctx.stroke();
 
-    // Pouch from the old build.
-    ctx.fillStyle = '#050505';
-    roundedRect(ctx, eggX - 24, eggY + 18, 48, 16, 7);
+    ctx.fillStyle = '#151517';
+    ctx.beginPath();
+    ctx.arc(leftForkX, forkY, 8, 0, Math.PI * 2);
+    ctx.arc(rightForkX, forkY, 8, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(244,240,230,.50)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+
+    ctx.fillStyle = '#18181b';
+    ctx.strokeStyle = 'rgba(245,240,230,.28)';
+    ctx.lineWidth = 1.4;
+    roundedRect(ctx, eggX - 17, eggY - 2, 34, 19, 7);
+    if (this.dragging) { ctx.fill(); ctx.stroke(); }
 
     if (this.eggReady && !this.activeShot) {
-      const eggScaleX = 1 + strength * 0.05;
-      const eggScaleY = 1 - strength * 0.055;
-      ctx.save();
-      ctx.translate(eggX, eggY);
-      ctx.rotate(this.drag.x * 0.0019);
-      ctx.scale(eggScaleX, eggScaleY);
-      this.drawEgg(ctx, 0, 0, 0, 0.82);
-      ctx.restore();
+      this.drawEgg(ctx, eggX, eggY, this.drag.x * 0.003, 1);
+      ctx.fillStyle = 'rgba(245,240,230,.08)';
+      roundedRect(ctx, eggX - 26, eggY + 24, 52, 16, 7);
+      ctx.fill();
     }
 
     if (this.now < this.tutorialUntil && !this.dragging && !this.activeShot) {
       const pulse = 0.5 + Math.sin(this.now * 0.006) * 0.5;
       ctx.save();
       ctx.globalAlpha = 0.42 + pulse * 0.22;
+      ctx.strokeStyle = COLORS.warm;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(295, 694);
+      ctx.quadraticCurveTo(282, 720, 245, 733);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(248, 725);
+      ctx.lineTo(238, 734);
+      ctx.lineTo(250, 737);
+      ctx.stroke();
       ctx.fillStyle = COLORS.warm;
-      ctx.font = '800 9px ui-monospace, monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('PULL BACK · AIM · RELEASE', restX, 738);
+      ctx.font = '800 11px ui-monospace, monospace';
+      ctx.fillText('PULL BACK', 294, 685);
+      ctx.fillStyle = 'rgba(245,240,230,.55)';
+      ctx.fillText('LET GO TO THROW', 308, 703);
       ctx.restore();
     }
-
     ctx.restore();
   }
 
@@ -1745,57 +1699,9 @@ class EggGame {
 
   drawSpeech(ctx) {
     if (!this.speech) return;
-
-    const age = this.now - this.speech.born;
-    const remaining = this.speech.until - this.now;
-    const enter = clamp(age / 150, 0, 1);
-    const exit = clamp(remaining / 150, 0, 1);
-    const alpha = Math.min(enter, exit);
-    const pop = lerp(0.82, 1, easeOutBack(enter));
-    const right = this.character.x < W / 2;
-    const x = clamp(this.character.x + (right ? 103 : -103), 82, W - 82);
-    const y = clamp(this.character.y - 176 - (1 - enter) * 4, 118, 336);
-
-    if (this.speech.legacy) {
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.translate(x, y);
-      ctx.rotate((right ? -1.6 : 1.6) * Math.PI / 180);
-      ctx.scale(pop, pop);
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = COLORS.warm;
-      ctx.font = `bold italic ${this.speech.text.length > 23 ? 13 : 15}px "Trebuchet MS", "Comic Sans MS", cursive`;
-      const lines = this.measureLines(ctx, this.speech.text, 188);
-      const mainY = this.speech.sub ? -7 : 0;
-      lines.forEach((line, index) => ctx.fillText(line, 0, mainY + index * 15));
-      if (this.speech.sub) {
-        ctx.fillStyle = '#8e8e94';
-        ctx.font = '8px ui-monospace, monospace';
-        ctx.fillText(this.speech.sub, 0, 19 + (lines.length - 1) * 8);
-      }
-      const width = clamp(Math.max(...lines.map((line) => ctx.measureText(line).width)) + 16, 74, 194);
-      const underlineY = this.speech.sub ? 31 : 20;
-      ctx.strokeStyle = 'rgba(244,240,230,.52)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-width / 2, underlineY);
-      ctx.lineTo(width / 2, underlineY - 2);
-      ctx.stroke();
-      const tailX = right ? -width * 0.36 : width * 0.36;
-      ctx.strokeStyle = 'rgba(244,240,230,.38)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(tailX, underlineY);
-      ctx.lineTo(tailX + (right ? -16 : 16), underlineY + 13);
-      ctx.stroke();
-      ctx.restore();
-      return;
-    }
-
+    const x = clamp(this.character.x + (this.character.x < W / 2 ? 70 : -70), 90, W - 90);
+    const y = clamp(this.character.y - 258, 82, 440);
     ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(0, (1 - enter) * 4);
     ctx.font = '900 12px ui-monospace, monospace';
     const lines = this.measureLines(ctx, this.speech.text, 168);
     const height = 20 + lines.length * 17;
@@ -1813,21 +1719,6 @@ class EggGame {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     lines.forEach((line, index) => ctx.fillText(line, left + width / 2, y + 10 + index * 17));
-    ctx.restore();
-  }
-
-  drawImpactToast(ctx) {
-    if (!this.impactToast) return;
-    const age = this.now - this.impactToast.born;
-    const remaining = this.impactToast.until - this.now;
-    const alpha = Math.min(clamp(age / 90, 0, 1), clamp(remaining / 110, 0, 1));
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = COLORS.yellow;
-    ctx.font = '900 10px ui-monospace, monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(this.impactToast.text, this.impactToast.x, this.impactToast.y - (1 - alpha) * 6);
     ctx.restore();
   }
 
@@ -1889,9 +1780,6 @@ class EggGame {
     const shakeY = this.shake ? rand(-this.shake * 0.55, this.shake * 0.55) : 0;
 
     ctx.save();
-    ctx.translate(W / 2, H / 2);
-    ctx.scale(this.impactZoom, this.impactZoom);
-    ctx.translate(-W / 2, -H / 2);
     ctx.translate(shakeX, shakeY);
 
     if (this.state.startsWith('l2')) this.drawBackgroundMoney(ctx);
@@ -1901,7 +1789,17 @@ class EggGame {
     this.drawWorldSplats(ctx);
 
     if (this.state === 'home') {
-      // Deliberately empty: the title and START THROWING are the only foreground elements.
+      this.character.walkPhase = this.now * 0.001;
+      this.character.rotation = Math.sin(this.now * 0.0012) * 0.02;
+      this.drawCharacter(ctx);
+      this.drawEgg(ctx, 346, 486 + Math.sin(this.now * 0.002) * 9, -0.16, 0.9);
+      ctx.fillStyle = 'rgba(245,240,230,.08)';
+      roundedRect(ctx, 278, 514, 122, 22, 11);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(245,240,230,.64)';
+      ctx.font = '800 10px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('MOVIE MARKETING HERO', 339, 529);
     }
 
     if (this.state === 'l1_clock') this.drawClock(ctx, false);
@@ -1929,15 +1827,10 @@ class EggGame {
     this.drawSlingshot(ctx);
     this.drawFlight(ctx);
     this.drawParticles(ctx);
-    this.drawImpactToast(ctx);
     this.drawSpeech(ctx);
     ctx.restore();
 
     this.drawHUD(ctx);
-    if (this.impactFlash > 0) {
-      ctx.fillStyle = `rgba(244,240,230,${this.impactFlash})`;
-      ctx.fillRect(0, 0, W, H);
-    }
   }
 
   loop(time) {

@@ -14,24 +14,39 @@ const required = [
   'vercel.json'
 ];
 
-for (const file of required) {
-  await access(resolve(root, file));
-}
+for (const file of required) await access(resolve(root, file));
 
 const game = await readFile(resolve(root, 'src/game.js'), 'utf8');
+const index = await readFile(resolve(root, 'index.html'), 'utf8');
+const css = await readFile(resolve(root, 'styles.css'), 'utf8');
+const audio = await readFile(resolve(root, 'src/audio.js'), 'utf8');
+
 const checks = [
-  ['single-state Level 2 transition', "showLevel2Intro()"],
-  ['Level 2 forced first duck', "!this.l2FirstDuckDone"],
-  ['periodic Level 2 duck', "this.l2NextDuckAt"],
-  ['Level 1 forced duck line', "YOU DIDN’T THINK IT WOULD BE THAT EASY"],
-  ['slow 9:30 clock', "value: '9:30 AM'"],
-  ['two bags', "ANOTHER BAG"],
-  ['drunk story reset', "this.storyProgress = 0"],
-  ['final Eternal copy', "your best decision in Eternal"]
+  ['fullscreen request', 'requestFullscreen()'],
+  ['portrait orientation lock', "screen.orientation.lock('portrait')"],
+  ['preparing eggs loading screen', 'PREPARING EGGS'],
+  ['old-style loading egg animation', 'loading-egg'],
+  ['old-style thick sling outline', "ctx.lineWidth = 22"],
+  ['old-style sling core', "ctx.lineWidth = 7"],
+  ['old-style sling fork circles', 'ctx.arc(leftForkX, forkY, 12'],
+  ['old-style impact noise', 'this.noise({ duration: 0.19'],
+  ['impact flash', 'this.impactFlash = 0.19'],
+  ['impact zoom', 'this.impactZoom = 1.022'],
+  ['opening strong legacy dialogue', "OPENING STRONG AANU."],
+  ['opening strong subline', 'reviews pending'],
+  ['Level 1 fourth credible shot dodge', '[2, 4, 5].includes(credibleIndex)'],
+  ['Level 2 fourth credible shot dodge', '[1, 4].includes(credibleIndex)'],
+  ['Level 2 money dodge line', 'MONEY MAKES ME QUICK.'],
+  ['office opens at 10:30', "value: '10:30 AM'"],
+  ['work login at 11:07', "value: '11:07 AM'"],
+  ['final birthday copy', 'your best decision in Eternal']
 ];
 
 for (const [label, token] of checks) {
-  if (!game.includes(token)) throw new Error(`Missing check: ${label}`);
+  const haystack = label.includes('loading') || label.includes('preparing') ? `${index}\n${css}`
+    : label.includes('noise') ? audio
+      : game;
+  if (!haystack.includes(token)) throw new Error(`Missing check: ${label}`);
 }
 
-console.log(`Validation passed: ${required.length} files and ${checks.length} gameplay checks.`);
+console.log(`Validation passed: ${required.length} files and ${checks.length} feature checks.`);

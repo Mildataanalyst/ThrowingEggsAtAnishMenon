@@ -1,6 +1,6 @@
 {
   "name": "throw-eggs-at-anish",
-  "version": "8.0.0",
+  "version": "8.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,5 +10,5 @@
   "engines": {
     "node": ">=20"
   },
-  "description": "A three-level, portrait-first birthday game starring Anish Menon."
+  "description": "V8 Premium with old-build fullscreen, loading, slingshot and impact feel."
 }
